@@ -1,0 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap');
+
+:root {
+  --bg-deep: #0a0a0f;
+  --bg-surface: #12121a;
+  --bg-elevated: #1a1a26;
+  --text-primary: #e8e8ed;
+  --text-muted: #6b6b7a;
+  --accent: #00d4aa;
+  --accent-dim: #00a885;
+  --danger: #ff6b6b;
+  --warning: #ffc857;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Outfit', -apple-system, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  background-image: 
+    radial-gradient(ellipse at 20% 0%, rgba(0, 212, 170, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(0, 168, 133, 0.05) 0%, transparent 50%);
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+h1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 3.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--text-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.tagline {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.status-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-elevated);
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+.status-card h2 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 1.25rem;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--bg-elevated);
+}
+
+.status-row:last-child {
+  border-bottom: none;
+}
+
+.badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  transition: all 0.3s ease;
+}
+
+.badge.ok {
+  background: rgba(0, 212, 170, 0.15);
+  color: var(--accent);
+}
+
+.badge.error {
+  background: rgba(255, 107, 107, 0.15);
+  color: var(--danger);
+}
+
