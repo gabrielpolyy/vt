@@ -1,9 +1,12 @@
 import 'dotenv/config';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
+import fastifyRateLimit from '@fastify/rate-limit';
+import fastifyCookie from '@fastify/cookie';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { db } from './db.js';
+import authPlugin from './auth/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -15,6 +18,18 @@ fastify.register(fastifyStatic, {
   root: join(__dirname, '../public'),
   prefix: '/',
 });
+
+// Rate limiting
+fastify.register(fastifyRateLimit, {
+  max: 100,
+  timeWindow: '1 minute',
+});
+
+// Cookie support
+fastify.register(fastifyCookie);
+
+// Auth plugin
+fastify.register(authPlugin);
 
 // Health check
 fastify.get('/api/health', async () => {
