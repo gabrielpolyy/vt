@@ -3,6 +3,7 @@ CREATE TABLE exercises (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     slug VARCHAR(50) UNIQUE,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    type VARCHAR(20) NOT NULL CHECK (type IN ('pitch', 'highway')),
     name VARCHAR(100) NOT NULL,
     description TEXT,
     icon VARCHAR(50),

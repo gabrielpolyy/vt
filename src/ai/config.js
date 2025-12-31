@@ -41,5 +41,9 @@ export const aiConfig = {
       temperature: 0.6,
       maxTokens: 512,
     },
+    highwayGeneration: {
+      temperature: 0.5,
+      maxTokens: 2048,
+    },
   },
 };

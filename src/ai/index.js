@@ -15,4 +15,4 @@ export default async function aiPlugin(fastify) {
 }
 
 export { aiClient, aiServices, aiConfig, getProvider };
-export { generateExercise, chat, generateFeedback } from './services.js';
+export { generateExercise, chat, generateFeedback, generateHighwayExercise } from './services.js';
