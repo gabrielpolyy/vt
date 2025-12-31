@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { db } from './db.js';
 import authPlugin from './auth/index.js';
+import aiPlugin from './ai/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -30,6 +31,9 @@ fastify.register(fastifyCookie);
 
 // Auth plugin
 fastify.register(authPlugin);
+
+// AI plugin
+fastify.register(aiPlugin);
 
 // Health check
 fastify.get('/api/health', async () => {
