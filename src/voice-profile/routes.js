@@ -1,8 +1,9 @@
 import { getProfile, saveProfile, getHistory } from './handlers.js';
+import { authenticate } from '../auth/middleware.js';
 
 export default async function voiceProfileRoutes(fastify) {
   // All routes require authentication
-  fastify.addHook('preHandler', fastify.authenticate);
+  fastify.addHook('preHandler', authenticate);
 
   // GET /api/voice-profile - Get current voice profile
   fastify.get('/', {

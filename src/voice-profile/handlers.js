@@ -45,15 +45,23 @@ export async function saveProfile(request, reply) {
   const userId = request.user.id;
   const { segments, durationMs } = request.body;
 
+  console.log(`[voice-profile] Saving profile for user ${userId}:`, {
+    segmentKeys: segments ? Object.keys(segments) : 'null',
+    durationMs,
+  });
+
   if (!segments) {
+    console.log(`[voice-profile] Missing segments in request body`);
     return reply.code(400).send({ error: 'segments is required' });
   }
 
   // Save the session history
   await saveVoiceExplorationSession(userId, segments, durationMs || null);
+  console.log(`[voice-profile] Saved exploration session for user ${userId}`);
 
   // Update the aggregate profile (expanding ranges)
   const updatedProfile = await upsertVoiceProfile(userId, segments);
+  console.log(`[voice-profile] Updated profile for user ${userId}`);
 
   return reply.code(201).send({
     profile: {
