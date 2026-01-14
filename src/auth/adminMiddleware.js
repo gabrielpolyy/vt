@@ -1,12 +1,34 @@
 import { db } from '../db.js';
-import { authenticate } from './middleware.js';
+import { verifyAccessToken } from '../utils/jwt.js';
 
 export async function requireAdmin(request, reply) {
-  // First ensure user is authenticated
-  await authenticate(request, reply);
+  // Try to authenticate from Authorization header or cookie
+  const authHeader = request.headers.authorization;
+  const cookieToken = request.cookies?.access_token;
 
-  // If authenticate already sent a response, stop here
-  if (reply.sent) return;
+  let token = null;
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.slice(7);
+  } else if (cookieToken) {
+    token = cookieToken;
+  }
+
+  if (!token) {
+    // Return flag for handler to show login form
+    request.needsLogin = true;
+    return;
+  }
+
+  try {
+    const payload = verifyAccessToken(token);
+    request.user = {
+      id: payload.sub,
+      email: payload.email,
+    };
+  } catch {
+    request.needsLogin = true;
+    return;
+  }
 
   // Check if user is admin
   const { rows } = await db.query(

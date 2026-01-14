@@ -3,6 +3,7 @@ import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyCookie from '@fastify/cookie';
+import fastifyFormbody from '@fastify/formbody';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { db } from './db.js';
@@ -31,6 +32,9 @@ fastify.register(fastifyRateLimit, {
 
 // Cookie support
 fastify.register(fastifyCookie);
+
+// Form body parsing
+fastify.register(fastifyFormbody);
 
 // Auth plugin
 fastify.register(authPlugin);
