@@ -11,6 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const seeds = {
   user: () => import('./user.js'),
   exercises: () => import('./exercises.js'),
+  'voice-profile': () => import('./voice-profile.js'),
 };
 
 async function runSeeds(seedNames) {

@@ -11,7 +11,8 @@
     "migrate": "node src/migrations/runner.js",
     "seed": "node src/seed/runner.js",
     "seed:user": "node src/seed/runner.js user",
-    "seed:exercises": "node src/seed/runner.js exercises"
+    "seed:exercises": "node src/seed/runner.js exercises",
+    "seed:voice-profile": "node src/seed/runner.js voice-profile"
   },
   "keywords": [],
   "author": "",

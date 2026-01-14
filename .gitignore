@@ -6,8 +6,8 @@ node_modules/
 .env.local
 .env.*.local
 
-# Logs
-logs/
+# Logs (root folder only, not src/logs)
+/logs/
 *.log
 npm-debug.log*
 
