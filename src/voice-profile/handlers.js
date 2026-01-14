@@ -29,24 +29,20 @@ export async function saveProfile(request, reply) {
   const userId = request.user.id;
   const { lowestMidi, highestMidi, durationMs } = request.body;
 
-  console.log(`[voice-profile] Saving profile for user ${userId}:`, {
-    lowestMidi,
-    highestMidi,
-    durationMs,
-  });
+  request.log.debug({ lowestMidi, highestMidi, durationMs }, 'Saving voice profile');
 
   if (lowestMidi == null && highestMidi == null) {
-    console.log(`[voice-profile] Missing lowestMidi and highestMidi in request body`);
+    request.log.warn('Missing lowestMidi and highestMidi in request body');
     return reply.code(400).send({ error: 'lowestMidi or highestMidi is required' });
   }
 
   // Save the session history
   await saveVoiceExplorationSession(userId, lowestMidi, highestMidi, durationMs || null);
-  console.log(`[voice-profile] Saved exploration session for user ${userId}`);
+  request.log.debug('Saved exploration session');
 
   // Update the aggregate profile (expanding ranges)
   const updatedProfile = await upsertVoiceProfile(userId, lowestMidi, highestMidi);
-  console.log(`[voice-profile] Updated profile for user ${userId}`);
+  request.log.debug('Updated voice profile');
 
   return reply.code(201).send({
     profile: {

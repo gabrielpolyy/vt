@@ -9,11 +9,13 @@ import { db } from './db.js';
 import authPlugin from './auth/index.js';
 import voiceProfilePlugin from './voice-profile/index.js';
 import exercisesPlugin from './exercises/index.js';
+import logsPlugin from './logs/index.js';
+import { buildLoggerOptions } from './logging/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: buildLoggerOptions() });
 
 // Serve static files from public/
 fastify.register(fastifyStatic, {
@@ -39,6 +41,9 @@ fastify.register(voiceProfilePlugin);
 // Exercises plugin
 fastify.register(exercisesPlugin);
 
+// Logs viewer plugin (admin only)
+fastify.register(logsPlugin);
+
 // Health check
 fastify.get('/api/health', async () => {
   return { status: 'ok', timestamp: new Date().toISOString() };
@@ -59,7 +64,7 @@ const start = async () => {
     const port = process.env.PORT || 3000;
     const host = process.env.HOST || '0.0.0.0';
     await fastify.listen({ port, host });
-    console.log(`🚀 Server running at http://${host}:${port}`);
+    fastify.log.info(`Server running at http://${host}:${port}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
