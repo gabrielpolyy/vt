@@ -8,6 +8,7 @@ import { dirname, join } from 'path';
 import { db } from './db.js';
 import authPlugin from './auth/index.js';
 import voiceProfilePlugin from './voice-profile/index.js';
+import exercisesPlugin from './exercises/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -34,6 +35,9 @@ fastify.register(authPlugin);
 
 // Voice profile plugin
 fastify.register(voiceProfilePlugin);
+
+// Exercises plugin
+fastify.register(exercisesPlugin);
 
 // Health check
 fastify.get('/api/health', async () => {
