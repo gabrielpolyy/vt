@@ -1,28 +1,14 @@
-// Headers that should be redacted from logs
-const SENSITIVE_HEADERS = ['authorization', 'cookie', 'x-api-key', 'x-auth-token'];
-
 // Body fields that should be redacted
 const SENSITIVE_BODY_FIELDS = ['password', 'token', 'secret', 'refreshToken', 'accessToken', 'identityToken'];
 
-// Maximum body size to log (prevent huge payloads in logs)
-const MAX_BODY_SIZE = 1000;
+// Maximum body size to log
+const MAX_BODY_SIZE = 2000;
 
-function sanitizeHeaders(headers) {
-  if (!headers) return {};
+// Routes to skip logging
+const SKIP_ROUTES = ['/logs', '/logs/login', '/logs/logout'];
 
-  const sanitized = {};
-  for (const [key, value] of Object.entries(headers)) {
-    if (SENSITIVE_HEADERS.includes(key.toLowerCase())) {
-      sanitized[key] = '[REDACTED]';
-    } else {
-      sanitized[key] = value;
-    }
-  }
-  return sanitized;
-}
-
-function sanitizeBody(body) {
-  if (!body) return undefined;
+export function sanitizeBody(body) {
+  if (body === undefined || body === null) return undefined;
   if (typeof body !== 'object') {
     const str = String(body);
     return str.length > MAX_BODY_SIZE ? str.slice(0, MAX_BODY_SIZE) + '...[truncated]' : str;
@@ -43,23 +29,19 @@ function sanitizeBody(body) {
   return sanitized;
 }
 
-// Custom request serializer for verbose logging
-export function requestSerializer(req) {
-  return {
-    method: req.method,
-    url: req.url,
-    headers: sanitizeHeaders(req.headers),
-    query: req.query,
-    body: sanitizeBody(req.body),
-    remoteAddress: req.ip,
-  };
+// Check if route should be logged
+export function shouldLogRoute(url) {
+  const path = url.split('?')[0];
+  return !SKIP_ROUTES.some(skip => path.startsWith(skip));
 }
 
-// Custom response serializer
-export function responseSerializer(res) {
-  return {
-    statusCode: res.statusCode,
-  };
+// Disable default Fastify request/response logging
+export function requestSerializer() {
+  return undefined;
+}
+
+export function responseSerializer() {
+  return undefined;
 }
 
 // Error serializer
@@ -68,6 +50,5 @@ export function errorSerializer(err) {
     type: err.constructor.name,
     message: err.message,
     stack: err.stack,
-    code: err.code,
   };
 }

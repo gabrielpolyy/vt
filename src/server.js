@@ -11,12 +11,18 @@ import authPlugin from './auth/index.js';
 import voiceProfilePlugin from './voice-profile/index.js';
 import exercisesPlugin from './exercises/index.js';
 import logsPlugin from './logs/index.js';
-import { buildLoggerOptions } from './logging/index.js';
+import { buildLoggerOptions, registerLoggingHooks } from './logging/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const fastify = Fastify({ logger: buildLoggerOptions() });
+const fastify = Fastify({
+  logger: buildLoggerOptions(),
+  disableRequestLogging: true,
+});
+
+// Register custom request/response logging
+registerLoggingHooks(fastify);
 
 // Serve static files from public/
 fastify.register(fastifyStatic, {

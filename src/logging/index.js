@@ -43,4 +43,5 @@ export function buildLoggerOptions() {
   return options;
 }
 
-export { requestSerializer, responseSerializer, errorSerializer };
+export { requestSerializer, responseSerializer, errorSerializer } from './serializers.js';
+export { registerLoggingHooks } from './hooks.js';
