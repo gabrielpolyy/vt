@@ -23,6 +23,7 @@ export function registerLoggingHooks(fastify) {
     const responseTime = reply.elapsedTime?.toFixed(1) || 0;
 
     const logData = {
+      timestamp: new Date().toISOString(),
       method: request.method,
       url: request.url,
       status: reply.statusCode,
@@ -44,6 +45,11 @@ export function registerLoggingHooks(fastify) {
     // Add response body if present (sanitized)
     if (request._responseBody) {
       logData.resBody = sanitizeBody(request._responseBody);
+    }
+
+    // Add transposition details if present (for exercise requests)
+    if (request.transpositionLog) {
+      logData.transposition = request.transpositionLog;
     }
 
     // Choose log level based on status code

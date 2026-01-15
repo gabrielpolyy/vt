@@ -37,7 +37,11 @@ export async function requireAdmin(request, reply) {
   );
 
   if (!rows[0]?.is_admin) {
-    return reply.code(403).send({ error: 'Admin access required' });
+    // Clear invalid cookie and show login form
+    reply.clearCookie('access_token', { path: '/logs' });
+    request.needsLogin = true;
+    request.loginError = 'Admin access required';
+    return;
   }
 
   request.user.isAdmin = true;

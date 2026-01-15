@@ -1,11 +1,24 @@
 import { requestSerializer, responseSerializer, errorSerializer } from './serializers.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { appendFile, mkdir } from 'fs/promises';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Log file path for development
+// Log file paths
 export const DEV_LOG_FILE = join(__dirname, '../../logs/app.log');
+export const TRANSPOSITION_LOG_FILE = join(__dirname, '../../logs/transpositions.log');
+
+// Log transposition data to dedicated file
+export async function logTransposition(data) {
+  try {
+    const logDir = dirname(TRANSPOSITION_LOG_FILE);
+    await mkdir(logDir, { recursive: true });
+    await appendFile(TRANSPOSITION_LOG_FILE, JSON.stringify(data) + '\n');
+  } catch (err) {
+    console.error('Failed to write transposition log:', err.message);
+  }
+}
 
 // Build logger options for Fastify
 export function buildLoggerOptions() {

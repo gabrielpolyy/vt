@@ -5,9 +5,9 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
-    "restart": "lsof -ti:3000 | xargs kill -9 2>/dev/null; node src/server.js",
+    "start": "lsof -ti:3000 | xargs kill -9 2>/dev/null; node src/server.js",
+    "dev": "lsof -ti:3000 | xargs kill -9 2>/dev/null; node --watch src/server.js",
+    "logs:clear": "rm -f logs/*.log",
     "migrate": "node src/migrations/runner.js",
     "seed": "node src/seed/runner.js",
     "seed:user": "node src/seed/runner.js user",

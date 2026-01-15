@@ -112,6 +112,41 @@ export function calculateTranspositionShift(definition, voiceProfile) {
   return Math.round(userMid - exerciseMid);
 }
 
+// Get transposition details for logging (shift amount, note changes, and stretch notes)
+export function getTranspositionDetails(definition, voiceProfile) {
+  const shift = calculateTranspositionShift(definition, voiceProfile);
+  const originalMidis = getAllMidiFromExercise(definition);
+  const { lowest_midi, highest_midi } = voiceProfile;
+
+  // Get unique MIDI values sorted, then map to note changes with MIDI values
+  const uniqueMidis = [...new Set(originalMidis)].sort((a, b) => a - b);
+  const noteChanges = uniqueMidis.map(midi => {
+    const toMidi = midi + shift;
+    return {
+      from: midiToPitch(midi),
+      fromMidi: midi,
+      to: midiToPitch(toMidi),
+      toMidi,
+    };
+  });
+
+  // Find stretch notes (after transposition, outside range but within stretch zone)
+  const stretchNotes = noteChanges
+    .filter(n => {
+      const midi = n.toMidi;
+      const isOutsideRange = midi < lowest_midi || midi > highest_midi;
+      const isWithinStretch = midi >= lowest_midi - STRETCH_SEMITONES && midi <= highest_midi + STRETCH_SEMITONES;
+      return isOutsideRange && isWithinStretch;
+    })
+    .map(n => ({
+      note: n.to,
+      midi: n.toMidi,
+      toleranceCents: STRETCH_TOLERANCE_CENTS,
+    }));
+
+  return { shift, noteChanges, stretchNotes, stretchTolerance: STRETCH_TOLERANCE_CENTS };
+}
+
 // Fit exercise to voice profile by adjusting tolerance for stretch notes and dropping notes too far outside
 // Supports both pitch exercises (steps/notes) and highway exercises (cues)
 export function fitExerciseToVoiceProfile(definition, voiceProfile) {

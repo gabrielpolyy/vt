@@ -61,6 +61,7 @@ function parseLogLine(line) {
       query: parsed.query,
       reqBody: parsed.reqBody,
       resBody: parsed.resBody,
+      transposition: parsed.transposition,
       err: parsed.err,
     };
   } catch {
@@ -124,7 +125,7 @@ const ROUTE_FILTERS = {
 export async function getLogs(request, reply) {
   // Show login form if not authenticated
   if (request.needsLogin) {
-    return reply.type('text/html').send(renderLoginForm());
+    return reply.type('text/html').send(renderLoginForm(request.loginError || ''));
   }
 
   const { level, search, limit = 500, source, route } = request.query;
@@ -325,6 +326,64 @@ function renderHtml(logs, options = {}) {
     .error-msg { color: ${LEVEL_COLORS.error}; }
     .plain-msg { color: #e2e8f0; padding: 4px 0; }
 
+    /* Transposition styles */
+    .transposition-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px;
+      background: #0f172a;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .transposition-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .transposition-voice {
+      color: #a78bfa;
+      font-weight: 500;
+    }
+    .transposition-shift {
+      color: #22c55e;
+      font-weight: 500;
+    }
+    .transposition-notes {
+      color: #94a3b8;
+      font-family: monospace;
+    }
+    .stretch-row {
+      margin-top: 4px;
+      padding-top: 8px;
+      border-top: 1px solid #334155;
+    }
+    .stretch-label {
+      color: #f59e0b;
+      font-weight: 500;
+    }
+    .stretch-notes {
+      color: #fbbf24;
+      font-family: monospace;
+    }
+    .transposition-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .copy-btn {
+      background: #334155;
+      border: none;
+      color: #e2e8f0;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      text-transform: none;
+    }
+    .copy-btn:hover { background: #475569; }
+    .copy-btn.copied { background: #22c55e; }
+
     /* Modal styles */
     .modal {
       display: none;
@@ -434,6 +493,17 @@ function renderHtml(logs, options = {}) {
         }, 2000);
       });
     }
+    function copyTransposition(btn) {
+      const data = JSON.parse(btn.dataset.transposition);
+      navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy JSON';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeModal();
     });
@@ -511,6 +581,27 @@ function renderHtml(logs, options = {}) {
           <div class="body-section">
             <div class="body-label">Response Body</div>
             <div class="body-content">${escapeHtml(JSON.stringify(log.resBody, null, 2))}</div>
+          </div>` : ''}
+          ${log.transposition ? `
+          <div class="body-section">
+            <div class="body-label transposition-header">
+              Transposition
+              <button class="copy-btn" data-transposition='${escapeHtml(JSON.stringify(log.transposition))}' onclick="copyTransposition(this)">Copy JSON</button>
+            </div>
+            <div class="transposition-info">
+              <div class="transposition-row">
+                <span class="transposition-voice">Voice: ${escapeHtml(log.transposition.voiceProfile?.low || '?')} (${log.transposition.voiceProfile?.lowMidi ?? '?'}) - ${escapeHtml(log.transposition.voiceProfile?.high || '?')} (${log.transposition.voiceProfile?.highMidi ?? '?'})</span>
+                <span class="transposition-shift">Shift: ${log.transposition.shift > 0 ? '+' : ''}${log.transposition.shift} semitones</span>
+              </div>
+              <div class="transposition-row">
+                <span class="transposition-notes">${(log.transposition.noteChanges || []).map(c => `${escapeHtml(c.from)} (${c.fromMidi}) → ${escapeHtml(c.to)} (${c.toMidi})`).join(', ')}</span>
+              </div>
+              ${log.transposition.stretchNotes?.length ? `
+              <div class="transposition-row stretch-row">
+                <span class="stretch-label">Stretch notes (80¢ tolerance):</span>
+                <span class="stretch-notes">${log.transposition.stretchNotes.map(s => `${escapeHtml(s.note)} (${s.midi})`).join(', ')}</span>
+              </div>` : ''}
+            </div>
           </div>` : ''}
           ${log.err ? `
           <div class="body-section">

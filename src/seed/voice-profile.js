@@ -22,9 +22,9 @@ export async function seed(db) {
     return;
   }
 
-  // Reasonable male baritone range: G2 (43) to G4 (67)
-  const lowestMidi = 43;  // G2
-  const highestMidi = 67; // G4
+  // Beginner with limited low range: A2 (45) to E3 (52) - a fifth
+  const lowestMidi = 45;  // A2
+  const highestMidi = 52; // E3
 
   await db.query(
     `INSERT INTO voice_profiles (user_id, lowest_midi, highest_midi)
@@ -32,5 +32,5 @@ export async function seed(db) {
     [userId, lowestMidi, highestMidi]
   );
 
-  console.log(`         Created voice profile for ${email}: G2 (${lowestMidi}) to G4 (${highestMidi})`);
+  console.log(`         Created voice profile for ${email}: A2 (${lowestMidi}) to E3 (${highestMidi})`);
 }
