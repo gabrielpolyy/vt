@@ -12,6 +12,12 @@ export function midiToPitch(midi) {
   return `${NOTE_NAMES[noteIndex]}${octave}`;
 }
 
+// Get pitch class (note name without octave, e.g., 60 -> "C")
+export function midiToPitchClass(midi) {
+  const noteIndex = midi % 12;
+  return NOTE_NAMES[noteIndex];
+}
+
 // Extract all MIDI values from exercise definition (supports pitch and highway)
 export function getAllMidiFromExercise(definition) {
   const midis = [];
@@ -55,6 +61,7 @@ export function transposeExercise(definition, shift) {
           if (note.pitchTargetMidi != null) {
             note.pitchTargetMidi += shift;
             note.pitch = midiToPitch(note.pitchTargetMidi);
+            note.text = midiToPitchClass(note.pitchTargetMidi);
           }
         }
       }
@@ -67,6 +74,7 @@ export function transposeExercise(definition, shift) {
       if (cue.pitchTargetMidi != null) {
         cue.pitchTargetMidi += shift;
         cue.pitch = midiToPitch(cue.pitchTargetMidi);
+        cue.text = midiToPitchClass(cue.pitchTargetMidi);
       }
     }
 

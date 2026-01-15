@@ -14,6 +14,11 @@ export function sanitizeBody(body) {
     return str.length > MAX_BODY_SIZE ? str.slice(0, MAX_BODY_SIZE) + '...[truncated]' : str;
   }
 
+  // Preserve arrays
+  if (Array.isArray(body)) {
+    return body.map(item => sanitizeBody(item));
+  }
+
   const sanitized = {};
   for (const [key, value] of Object.entries(body)) {
     if (SENSITIVE_BODY_FIELDS.includes(key)) {
