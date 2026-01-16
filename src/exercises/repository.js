@@ -78,6 +78,7 @@ export async function getAllProgress(userId) {
        e.name,
        e.type,
        e.sort_order,
+       e.definition,
        COALESCE(p.completed_count, 0) AS completed_count,
        p.best_score,
        p.last_played_at

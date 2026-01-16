@@ -68,11 +68,27 @@ export async function getExercise(request, reply) {
   return reply.send(definition);
 }
 
-// Compute stars from best_score
-function computeStars(bestScore) {
-  if (bestScore == null || bestScore < 60) return 0;
-  if (bestScore < 80) return 1;
-  if (bestScore < 95) return 2;
+// Count total notes in exercise definition
+function countNotes(definition) {
+  let count = 0;
+  for (const step of definition.steps || []) {
+    count += (step.notes || []).length;
+  }
+  return count;
+}
+
+// Compute maxScore from definition (20 points per note)
+function computeMaxScore(definition) {
+  return countNotes(definition) * 20;
+}
+
+// Compute stars from score/maxScore percentage
+function computeStars(score, maxScore) {
+  if (score == null || maxScore === 0) return 0;
+  const percent = (score / maxScore) * 100;
+  if (percent < 60) return 0;
+  if (percent < 80) return 1;
+  if (percent < 95) return 2;
   return 3;
 }
 
@@ -86,13 +102,19 @@ export async function createAttempt(request, reply) {
     return reply.code(400).send({ error: 'score is required' });
   }
 
-  if (score < 0 || score > 100) {
-    return reply.code(400).send({ error: 'score must be between 0 and 100' });
+  if (score < 0) {
+    return reply.code(400).send({ error: 'score must be non-negative' });
   }
 
   const exercise = await getExerciseBySlug(slug);
   if (!exercise) {
     return reply.code(404).send({ error: 'Exercise not found' });
+  }
+
+  const maxScore = computeMaxScore(exercise.definition);
+
+  if (score > maxScore) {
+    return reply.code(400).send({ error: `score cannot exceed maxScore (${maxScore})` });
   }
 
   const attempt = await recordAttempt(userId, exercise.id, {
@@ -103,12 +125,13 @@ export async function createAttempt(request, reply) {
   });
 
   const progress = await getExerciseProgress(userId, exercise.id);
-  const stars = computeStars(progress.best_score);
+  const stars = computeStars(progress.best_score, maxScore);
 
   return reply.code(201).send({
     attempt: {
       id: attempt.id,
       score: attempt.score,
+      maxScore,
       durationMs: attempt.duration_ms,
       completed: attempt.completed,
       stepResults: attempt.step_results,
@@ -116,6 +139,7 @@ export async function createAttempt(request, reply) {
     },
     progress: {
       bestScore: progress.best_score,
+      maxScore,
       stars,
       completedCount: progress.completed_count,
       lastPlayedAt: progress.last_played_at,
@@ -138,6 +162,8 @@ export async function listProgress(request, reply) {
       progressByType[type] = [];
     }
 
+    const maxScore = computeMaxScore(row.definition);
+
     progressByType[type].push({
       exerciseId: row.exercise_id,
       slug: row.slug,
@@ -145,7 +171,8 @@ export async function listProgress(request, reply) {
       sortOrder: row.sort_order,
       completedCount: row.completed_count,
       bestScore: row.best_score,
-      stars: computeStars(row.best_score),
+      maxScore,
+      stars: computeStars(row.best_score, maxScore),
       lastPlayedAt: row.last_played_at,
     });
   }
@@ -174,12 +201,14 @@ export async function getProgressBySlug(request, reply) {
     return reply.code(404).send({ error: 'Exercise not found' });
   }
 
+  const maxScore = computeMaxScore(exercise.definition);
+
   const [progress, attempts] = await Promise.all([
     getExerciseProgress(userId, exercise.id),
     getAttemptHistory(userId, exercise.id, Math.min(limit, 50)),
   ]);
 
-  const stars = computeStars(progress.best_score);
+  const stars = computeStars(progress.best_score, maxScore);
 
   return reply.send({
     exercise: {
@@ -190,6 +219,7 @@ export async function getProgressBySlug(request, reply) {
     },
     progress: {
       bestScore: progress.best_score,
+      maxScore,
       stars,
       completedCount: progress.completed_count,
       lastPlayedAt: progress.last_played_at,
@@ -197,6 +227,7 @@ export async function getProgressBySlug(request, reply) {
     attempts: attempts.map((a) => ({
       id: a.id,
       score: a.score,
+      maxScore,
       durationMs: a.duration_ms,
       completed: a.completed,
       stepResults: a.step_results,
