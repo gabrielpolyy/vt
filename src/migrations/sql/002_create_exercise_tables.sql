@@ -6,7 +6,6 @@ CREATE TABLE exercises (
     type VARCHAR(20) NOT NULL CHECK (type IN ('pitch', 'highway', 'warmup')),
     name VARCHAR(100) NOT NULL,
     description TEXT,
-    icon VARCHAR(50),
     definition JSONB NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
     sort_order INTEGER DEFAULT 0,
@@ -49,9 +48,8 @@ CREATE TABLE exercise_attempts (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     exercise_id UUID NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
     score INTEGER,
-    duration_ms INTEGER,
     completed BOOLEAN DEFAULT FALSE,
-    step_results JSONB,
+    result JSONB,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

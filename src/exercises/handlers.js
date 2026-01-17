@@ -96,7 +96,7 @@ function computeStars(score, maxScore) {
 export async function createAttempt(request, reply) {
   const { slug } = request.params;
   const userId = request.user.id;
-  const { score, durationMs, completed, stepResults } = request.body;
+  const { score, completed, result } = request.body;
 
   if (score == null) {
     return reply.code(400).send({ error: 'score is required' });
@@ -119,9 +119,8 @@ export async function createAttempt(request, reply) {
 
   const attempt = await recordAttempt(userId, exercise.id, {
     score,
-    durationMs: durationMs || null,
     completed: completed ?? true,
-    stepResults: stepResults || null,
+    result: result || null,
   });
 
   const progress = await getExerciseProgress(userId, exercise.id);
@@ -132,9 +131,8 @@ export async function createAttempt(request, reply) {
       id: attempt.id,
       score: attempt.score,
       maxScore,
-      durationMs: attempt.duration_ms,
       completed: attempt.completed,
-      stepResults: attempt.step_results,
+      result: attempt.result,
       createdAt: attempt.created_at,
     },
     progress: {
@@ -228,9 +226,8 @@ export async function getProgressBySlug(request, reply) {
       id: a.id,
       score: a.score,
       maxScore,
-      durationMs: a.duration_ms,
       completed: a.completed,
-      stepResults: a.step_results,
+      result: a.result,
       createdAt: a.created_at,
     })),
   });

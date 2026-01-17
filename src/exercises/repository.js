@@ -3,7 +3,7 @@ import { db } from '../db.js';
 // Get exercise by slug
 export async function getExerciseBySlug(slug) {
   const result = await db.query(
-    `SELECT id, slug, type, name, description, icon, definition
+    `SELECT id, slug, type, name, description, definition
      FROM exercises
      WHERE slug = $1 AND is_active = TRUE AND user_id IS NULL`,
     [slug]
@@ -14,7 +14,7 @@ export async function getExerciseBySlug(slug) {
 // Get all global exercises
 export async function getAllExercises() {
   const result = await db.query(
-    `SELECT id, slug, type, name, description, icon, definition
+    `SELECT id, slug, type, name, description, definition
      FROM exercises
      WHERE is_active = TRUE AND user_id IS NULL
      ORDER BY sort_order, name`
@@ -25,7 +25,7 @@ export async function getAllExercises() {
 // Get exercises by type
 export async function getExercisesByType(type) {
   const result = await db.query(
-    `SELECT id, slug, type, name, description, icon, definition
+    `SELECT id, slug, type, name, description, definition
      FROM exercises
      WHERE type = $1 AND is_active = TRUE AND user_id IS NULL
      ORDER BY sort_order, name`,
@@ -35,17 +35,17 @@ export async function getExercisesByType(type) {
 }
 
 // Record an attempt and update progress atomically
-export async function recordAttempt(userId, exerciseId, { score, durationMs, completed, stepResults }) {
+export async function recordAttempt(userId, exerciseId, { score, completed, result }) {
   const client = await db.connect();
   try {
     await client.query('BEGIN');
 
     // Insert the attempt
     const attemptResult = await client.query(
-      `INSERT INTO exercise_attempts (user_id, exercise_id, score, duration_ms, completed, step_results)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, score, duration_ms, completed, step_results, created_at`,
-      [userId, exerciseId, score, durationMs, completed, stepResults ? JSON.stringify(stepResults) : null]
+      `INSERT INTO exercise_attempts (user_id, exercise_id, score, completed, result)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, score, completed, result, created_at`,
+      [userId, exerciseId, score, completed, result ? JSON.stringify(result) : null]
     );
 
     // Upsert progress: increment count, update best_score if higher, set last_played_at
@@ -108,7 +108,7 @@ export async function getExerciseProgress(userId, exerciseId) {
 // Get attempt history for an exercise
 export async function getAttemptHistory(userId, exerciseId, limit = 10) {
   const result = await db.query(
-    `SELECT id, score, duration_ms, completed, step_results, created_at
+    `SELECT id, score, completed, result, created_at
      FROM exercise_attempts
      WHERE user_id = $1 AND exercise_id = $2
      ORDER BY created_at DESC

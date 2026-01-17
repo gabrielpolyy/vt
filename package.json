@@ -12,7 +12,8 @@
     "seed": "node src/seed/runner.js",
     "seed:user": "node src/seed/runner.js user",
     "seed:exercises": "node src/seed/runner.js exercises",
-    "seed:voice-profile": "node src/seed/runner.js voice-profile"
+    "seed:voice-profile": "node src/seed/runner.js voice-profile",
+    "db:reset": "node src/db-reset.js"
   },
   "keywords": [],
   "author": "",
