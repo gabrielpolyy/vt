@@ -1,10 +1,11 @@
 -- Voice Profile (current state per user)
--- Simplified: just lowest and highest MIDI notes
+-- Stores computed lowest/highest MIDI notes with confidence score
 CREATE TABLE voice_profiles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
     lowest_midi INTEGER,
     highest_midi INTEGER,
+    confidence_score REAL DEFAULT 0,  -- 0.0-1.0 confidence in the range detection
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -17,12 +18,14 @@ CREATE TRIGGER voice_profiles_updated_at
     EXECUTE FUNCTION update_updated_at();
 
 -- Voice Exploration Sessions (history of each session)
+-- Now stores full pitch samples for analysis and future ML training
 CREATE TABLE voice_exploration_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     lowest_midi INTEGER,
     highest_midi INTEGER,
-    duration_ms INTEGER,
+    pitch_samples JSONB,      -- Array of PitchSample objects with timestampMs, midiNote, frequency, confidence, segmentId
+    confidence_score REAL,    -- Confidence score from the analysis algorithm
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

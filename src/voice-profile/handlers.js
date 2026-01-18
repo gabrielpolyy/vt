@@ -3,7 +3,10 @@ import {
   upsertVoiceProfile,
   saveVoiceExplorationSession,
   getVoiceExplorationHistory,
+  saveSessionWithSamples,
+  upsertVoiceProfileWithConfidence,
 } from './repository.js';
+import { analyzeRange } from './analysis.js';
 
 // GET /api/voice-profile - Get user's current voice profile
 export async function getProfile(request, reply) {
@@ -27,9 +30,9 @@ export async function getProfile(request, reply) {
 // POST /api/voice-profile - Save voice exploration session and update profile
 export async function saveProfile(request, reply) {
   const userId = request.user.id;
-  const { lowestMidi, highestMidi, durationMs } = request.body;
+  const { lowestMidi, highestMidi } = request.body;
 
-  request.log.debug({ lowestMidi, highestMidi, durationMs }, 'Saving voice profile');
+  request.log.debug({ lowestMidi, highestMidi }, 'Saving voice profile');
 
   if (lowestMidi == null && highestMidi == null) {
     request.log.warn('Missing lowestMidi and highestMidi in request body');
@@ -37,7 +40,7 @@ export async function saveProfile(request, reply) {
   }
 
   // Save the session history
-  await saveVoiceExplorationSession(userId, lowestMidi, highestMidi, durationMs || null);
+  await saveVoiceExplorationSession(userId, lowestMidi, highestMidi);
   request.log.debug('Saved exploration session');
 
   // Update the aggregate profile (expanding ranges)
@@ -65,8 +68,67 @@ export async function getHistory(request, reply) {
       id: s.id,
       lowestMidi: s.lowest_midi,
       highestMidi: s.highest_midi,
-      durationMs: s.duration_ms,
       createdAt: s.created_at,
     })),
+  });
+}
+
+// POST /api/voice-profile/session - Save warmup session with full pitch history
+export async function saveWarmupSession(request, reply) {
+  const userId = request.user.id;
+  const { samples } = request.body;
+
+  if (!samples || !Array.isArray(samples)) {
+    return reply.code(400).send({ error: 'samples array is required' });
+  }
+
+  request.log.debug({ sampleCount: samples.length }, 'Analyzing warmup session');
+
+  // Run the percentile-based range analysis
+  const { lowestMidi, highestMidi, confidence, valid, reason, stats } = analyzeRange(samples);
+
+  request.log.info({ lowestMidi, highestMidi, confidence, valid, reason, stats }, 'Range analysis complete');
+
+  // Save the session with raw samples for future ML training
+  await saveSessionWithSamples(
+    userId,
+    lowestMidi,
+    highestMidi,
+    samples,
+    confidence
+  );
+
+  // Update the aggregate profile if we got valid results
+  let updatedProfile = null;
+  if (lowestMidi !== null || highestMidi !== null) {
+    request.log.info({ lowestMidi, highestMidi, confidence }, 'Updating voice profile');
+    updatedProfile = await upsertVoiceProfileWithConfidence(
+      userId,
+      lowestMidi,
+      highestMidi,
+      confidence
+    );
+    request.log.info({ updatedProfile }, 'Voice profile updated');
+  } else {
+    request.log.warn('Skipping profile update - both lowestMidi and highestMidi are null');
+  }
+
+  return reply.code(201).send({
+    analysis: {
+      lowestMidi,
+      highestMidi,
+      confidence,
+      valid,
+      reason,
+      stats,
+    },
+    profile: updatedProfile
+      ? {
+          lowestMidi: updatedProfile.lowest_midi,
+          highestMidi: updatedProfile.highest_midi,
+          confidenceScore: updatedProfile.confidence_score,
+          lastUpdated: updatedProfile.updated_at,
+        }
+      : null,
   });
 }

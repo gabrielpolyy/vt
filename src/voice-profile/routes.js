@@ -1,4 +1,4 @@
-import { getProfile, saveProfile, getHistory } from './handlers.js';
+import { getProfile, saveProfile, getHistory, saveWarmupSession } from './handlers.js';
 import { authenticate } from '../auth/middleware.js';
 
 export default async function voiceProfileRoutes(fastify) {
@@ -18,5 +18,10 @@ export default async function voiceProfileRoutes(fastify) {
   // GET /api/voice-profile/history - Get session history
   fastify.get('/history', {
     handler: getHistory,
+  });
+
+  // POST /api/voice-profile/session - Save warmup session with full pitch samples
+  fastify.post('/session', {
+    handler: saveWarmupSession,
   });
 }

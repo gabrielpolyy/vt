@@ -11,6 +11,17 @@ const env = {
   PGPASSWORD: url.password,
 };
 
+// Terminate all connections to the database
+console.log(`Terminating connections to "${dbName}"...`);
+try {
+  execSync(
+    `psql -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${dbName}' AND pid <> pg_backend_pid();"`,
+    { env, stdio: 'inherit' }
+  );
+} catch (e) {
+  // Ignore errors if database doesn't exist yet
+}
+
 console.log(`Dropping database "${dbName}"...`);
 try {
   execSync(`dropdb ${dbName} --if-exists`, { env, stdio: 'inherit' });
