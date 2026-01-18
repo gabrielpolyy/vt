@@ -76,7 +76,7 @@ export async function getHistory(request, reply) {
 // POST /api/voice-profile/session - Save warmup session with full pitch history
 export async function saveWarmupSession(request, reply) {
   const userId = request.user.id;
-  const { samples } = request.body;
+  const { samples, level, node } = request.body;
 
   if (!samples || !Array.isArray(samples)) {
     return reply.code(400).send({ error: 'samples array is required' });
@@ -95,7 +95,9 @@ export async function saveWarmupSession(request, reply) {
     lowestMidi,
     highestMidi,
     samples,
-    confidence
+    confidence,
+    level,
+    node
   );
 
   // Update the aggregate profile if we got valid results

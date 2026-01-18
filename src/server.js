@@ -11,6 +11,8 @@ import authPlugin from './auth/index.js';
 import voiceProfilePlugin from './voice-profile/index.js';
 import exercisesPlugin from './exercises/index.js';
 import logsPlugin from './logs/index.js';
+import dashboardPlugin from './dashboard/index.js';
+import journeyPlugin from './journey/index.js';
 import { buildLoggerOptions, registerLoggingHooks } from './logging/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -53,6 +55,12 @@ fastify.register(exercisesPlugin);
 
 // Logs viewer plugin (admin only)
 fastify.register(logsPlugin);
+
+// Dashboard plugin
+fastify.register(dashboardPlugin);
+
+// Journey plugin
+fastify.register(journeyPlugin);
 
 // Health check
 fastify.get('/api/health', async () => {

@@ -26,6 +26,8 @@ CREATE TABLE voice_exploration_sessions (
     highest_midi INTEGER,
     pitch_samples JSONB,      -- Array of PitchSample objects with timestampMs, midiNote, frequency, confidence, segmentId
     confidence_score REAL,    -- Confidence score from the analysis algorithm
+    level INTEGER,            -- Which level's warmup this session completed (1-5)
+    node INTEGER,             -- Which node within the level (1-N)
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

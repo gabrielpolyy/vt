@@ -55,14 +55,16 @@ export async function saveSessionWithSamples(
   lowestMidi,
   highestMidi,
   samples,
-  confidenceScore
+  confidenceScore,
+  level = null,
+  node = null
 ) {
   const result = await db.query(
     `INSERT INTO voice_exploration_sessions
-      (user_id, lowest_midi, highest_midi, pitch_samples, confidence_score)
-    VALUES ($1, $2, $3, $4, $5)
+      (user_id, lowest_midi, highest_midi, pitch_samples, confidence_score, level, node)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
     RETURNING *`,
-    [userId, lowestMidi, highestMidi, JSON.stringify(samples), confidenceScore]
+    [userId, lowestMidi, highestMidi, JSON.stringify(samples), confidenceScore, level, node]
   );
   return result.rows[0];
 }

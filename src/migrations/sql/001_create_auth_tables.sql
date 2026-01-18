@@ -5,6 +5,8 @@ CREATE TABLE users (
     email_verified BOOLEAN DEFAULT FALSE,
     password_hash VARCHAR(255),
     name VARCHAR(255),
+    level INTEGER NOT NULL DEFAULT 1,
+    node INTEGER NOT NULL DEFAULT 1,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
