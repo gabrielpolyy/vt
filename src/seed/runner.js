@@ -12,6 +12,7 @@ const seeds = {
   user: () => import('./user.js'),
   exercises: () => import('./exercises.js'),
   'voice-profile': () => import('./voice-profile.js'),
+  'exercise-attempts': () => import('./exercise-attempts.js'),
 };
 
 async function runSeeds(seedNames) {
