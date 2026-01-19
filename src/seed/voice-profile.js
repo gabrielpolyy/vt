@@ -34,17 +34,13 @@ export async function seed(db) {
 
   console.log(`         Created voice profile for ${email}: A2 (${lowestMidi}) to E3 (${highestMidi})`);
 
-  // Create voice exploration sessions for levels 1-3 (to unlock exercises in those levels)
-  // User is at level 3, node 2, so create sessions for all nodes up to that point
+  // Create voice exploration sessions for completed warmups
+  // User is at level 2, node 2 - so warmups L1N1, L1N2, L2N1 are completed
+  // (each level has 2 nodes)
   const sessions = [
     { level: 1, node: 1 },
     { level: 1, node: 2 },
-    { level: 1, node: 3 },
     { level: 2, node: 1 },
-    { level: 2, node: 2 },
-    { level: 2, node: 3 },
-    { level: 3, node: 1 },
-    { level: 3, node: 2 },
   ];
   for (const { level, node } of sessions) {
     await db.query(
@@ -54,5 +50,5 @@ export async function seed(db) {
     );
   }
 
-  console.log(`         Created voice exploration sessions for levels 1-3 with nodes`);
+  console.log(`         Created ${sessions.length} voice exploration sessions (warmups)`);
 }

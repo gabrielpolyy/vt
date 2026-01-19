@@ -1,3 +1,23 @@
+// Node to exercises mapping - each journey node unlocks specific exercises
+// User completes warmup for a node, then can attempt that node's exercises
+const nodeExercises = {
+  // Level 1 - Foundations
+  'L1N1': ['highway_pitch_intro', 'single_note_hold', 'three_note_intro', 'five_note_warmup'],
+  'L1N2': ['highway_note_matching', 'quick_match_low', 'quick_match_mid', 'quick_match_full'],
+  // Level 2 - Scales
+  'L2N1': ['highway_major_scale', 'major_ascending', 'major_descending', 'major_full'],
+  'L2N2': ['highway_minor_scale', 'minor_ascending', 'minor_descending', 'minor_full'],
+  // Level 3 - Intervals
+  'L3N1': ['highway_small_intervals', 'half_steps', 'whole_steps', 'thirds_practice'],
+  'L3N2': ['highway_large_intervals', 'perfect_fourths', 'perfect_fifths', 'octave_jumps'],
+  // Level 4 - Patterns
+  'L4N1': ['highway_arpeggios', 'major_triad_arpeggio', 'minor_triad_arpeggio', 'seventh_arpeggio'],
+  'L4N2': ['highway_melodic_sequences', 'sequence_pattern_1', 'sequence_pattern_2', 'combined_pattern'],
+  // Level 5 - Advanced (not unlocked yet for this user)
+  'L5N1': ['highway_precision', 'precision_scales', 'precision_arpeggios', 'chromatic_challenge'],
+  'L5N2': ['highway_mastery', 'master_scale_test', 'master_interval_test', 'master_pattern_test'],
+};
+
 export async function seed(db) {
   const email = 'gabriel.policiuc@gmail.com';
 
@@ -22,31 +42,29 @@ export async function seed(db) {
     return;
   }
 
-  // Fetch all exercises with definitions
+  // Get completed warmups to determine which nodes are unlocked
+  const { rows: warmups } = await db.query(
+    'SELECT DISTINCT level, node FROM voice_exploration_sessions WHERE user_id = $1',
+    [userId]
+  );
+
+  // Build set of unlocked exercise slugs based on completed warmups
+  const unlockedSlugs = new Set();
+  for (const warmup of warmups) {
+    const nodeKey = `L${warmup.level}N${warmup.node}`;
+    const exercises = nodeExercises[nodeKey] || [];
+    exercises.forEach(slug => unlockedSlugs.add(slug));
+  }
+
+  console.log(`         Unlocked nodes: ${warmups.map(w => `L${w.level}N${w.node}`).join(', ')}`);
+  console.log(`         Unlocked exercises: ${unlockedSlugs.size}`);
+
+  // Fetch exercises that are unlocked
   const { rows: exercises } = await db.query(
     'SELECT id, slug, type, sort_order, definition FROM exercises WHERE user_id IS NULL ORDER BY sort_order'
   );
 
-  // Exercises to skip (simulates incomplete progress)
-  const skipSlugs = new Set([
-    // Advanced pitch exercises the user hasn't attempted yet
-    'minor_full',
-    'thirds_practice',
-    'minor_triad_arpeggio',
-    'sequence_pattern_2',
-    // Level 7-8 (precision/master tests)
-    'precision_scales',
-    'precision_arpeggios',
-    'chromatic_challenge',
-    'master_scale_test',
-    'master_interval_test',
-    'master_pattern_test',
-    // Advanced highway
-    'highway_precision',
-    'highway_mastery',
-  ]);
-
-  const exercisesToSeed = exercises.filter((ex) => !skipSlugs.has(ex.slug));
+  const exercisesToSeed = exercises.filter((ex) => unlockedSlugs.has(ex.slug));
 
   console.log(`         Generating attempts for ${exercisesToSeed.length} exercises...`);
 
@@ -155,9 +173,9 @@ function calculateMaxScore(def, type) {
     }
     return noteCount * 20; // 20 points per note
   } else if (type === 'highway') {
-    // Count cues
-    const cueCount = def.cues?.length || 0;
-    return cueCount * 20; // 20 points per cue
+    // Count voice cues only
+    const voiceCueCount = def.cues?.filter(cue => cue.kind === 'voice').length || 0;
+    return voiceCueCount * 20; // 20 points per voice cue
   }
   return 100; // default fallback
 }
@@ -243,26 +261,26 @@ function generateHighwayResult(def, hitRatio) {
   let hitCount = 0;
   let perfectCount = 0;
 
-  if (def.cues) {
-    for (const cue of def.cues) {
-      totalCues++;
+  // Only process voice cues (not pause or subtitleLineBreak)
+  const voiceCues = def.cues?.filter(cue => cue.kind === 'voice') || [];
+  for (const cue of voiceCues) {
+    totalCues++;
 
-      const wasHit = Math.random() < hitRatio + 0.1;
-      const wasPerfect = wasHit && Math.random() < 0.25;
+    const wasHit = Math.random() < hitRatio + 0.1;
+    const wasPerfect = wasHit && Math.random() < 0.25;
 
-      if (wasHit) hitCount++;
-      if (wasPerfect) perfectCount++;
+    if (wasHit) hitCount++;
+    if (wasPerfect) perfectCount++;
 
-      const cueScore = wasPerfect ? 20 : wasHit ? Math.floor(10 + Math.random() * 8) : Math.floor(Math.random() * 5);
+    const cueScore = wasPerfect ? 20 : wasHit ? Math.floor(10 + Math.random() * 8) : Math.floor(Math.random() * 5);
 
-      cueResults.push({
-        cueId: cue.id,
-        score: cueScore,
-        hit: wasHit,
-        perfect: wasPerfect,
-        targetMidi: cue.pitchTargetMidi,
-      });
-    }
+    cueResults.push({
+      cueId: cue.id,
+      score: cueScore,
+      hit: wasHit,
+      perfect: wasPerfect,
+      targetMidi: cue.pitchTargetMidi,
+    });
   }
 
   return {

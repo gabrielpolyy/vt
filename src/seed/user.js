@@ -6,7 +6,7 @@ const users = [
     name: 'Gabriel',
     password: '12345678',
     isAdmin: false,
-    level: 3,
+    level: 2,
     node: 2,
   },
   {
