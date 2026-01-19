@@ -1,13 +1,19 @@
 import { db } from '../db.js';
 
-// Get current streak - count consecutive days with exercise_attempts entries
+// Get current streak - count consecutive days with exercise_attempts OR user_activity entries
 export async function getCurrentStreak(userId) {
   const result = await db.query(
     `WITH activity_dates AS (
+      -- Include both exercise_attempts and user_activity for streak calculation
       SELECT DISTINCT DATE(created_at AT TIME ZONE 'UTC') as activity_date
       FROM exercise_attempts
       WHERE user_id = $1
         AND DATE(created_at AT TIME ZONE 'UTC') <= CURRENT_DATE
+      UNION
+      SELECT DISTINCT activity_date
+      FROM user_activity
+      WHERE user_id = $1
+        AND activity_date <= CURRENT_DATE
     ),
     numbered AS (
       SELECT activity_date,
@@ -36,10 +42,17 @@ export async function getWeeklyActivity(userId) {
   const result = await db.query(
     `SELECT
       (CURRENT_DATE - i) AS day,
-      EXISTS(
-        SELECT 1 FROM exercise_attempts
-        WHERE user_id = $1
-        AND DATE(created_at AT TIME ZONE 'UTC') = CURRENT_DATE - i
+      (
+        EXISTS(
+          SELECT 1 FROM exercise_attempts
+          WHERE user_id = $1
+          AND DATE(created_at AT TIME ZONE 'UTC') = CURRENT_DATE - i
+        )
+        OR EXISTS(
+          SELECT 1 FROM user_activity
+          WHERE user_id = $1
+          AND activity_date = CURRENT_DATE - i
+        )
       ) as has_activity
     FROM generate_series(6, 0, -1) AS i
     ORDER BY i DESC`,
@@ -126,11 +139,12 @@ export async function getNotesGainedThisMonth(userId) {
   return notesGainedLow + notesGainedHigh;
 }
 
-// Check if user has any previous activity
+// Check if user has any previous activity (from exercise_attempts or user_activity)
 export async function hasAnyActivity(userId) {
   const result = await db.query(
-    `SELECT EXISTS(
-      SELECT 1 FROM exercise_attempts WHERE user_id = $1
+    `SELECT (
+      EXISTS(SELECT 1 FROM exercise_attempts WHERE user_id = $1)
+      OR EXISTS(SELECT 1 FROM user_activity WHERE user_id = $1)
     ) as has_activity`,
     [userId]
   );
@@ -187,4 +201,14 @@ export async function getTotalScore(userId) {
     [userId]
   );
   return result.rows[0]?.total_score || 0;
+}
+
+// Record daily activity for streak purposes (idempotent - safe to call multiple times)
+export async function recordDailyActivity(userId, source = 'practice') {
+  await db.query(
+    `INSERT INTO user_activity (user_id, activity_date, source)
+    VALUES ($1, CURRENT_DATE, $2)
+    ON CONFLICT (user_id, activity_date, source) DO NOTHING`,
+    [userId, source]
+  );
 }

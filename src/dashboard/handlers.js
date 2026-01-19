@@ -8,6 +8,7 @@ import {
   getUserProgress,
   updateUserProgress,
   getTotalScore,
+  recordDailyActivity,
 } from './repository.js';
 
 // Compute motivation message using priority logic
@@ -126,4 +127,14 @@ export async function updateProgressHandler(request, reply) {
   const updatedProgress = await updateUserProgress(userId, level, node);
 
   return reply.send({ level: updatedProgress.level, node: updatedProgress.node });
+}
+
+// POST /api/activity/ping - Record daily activity for streak (without recording attempt)
+export async function recordActivityHandler(request, reply) {
+  const userId = request.user.id;
+  const { source = 'practice' } = request.body || {};
+
+  await recordDailyActivity(userId, source);
+
+  return reply.code(204).send();
 }
