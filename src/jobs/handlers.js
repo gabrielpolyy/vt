@@ -2,7 +2,6 @@ import { insertJob } from './repository.js';
 import { uploadAudioToR2 } from '../utils/r2.js';
 
 export async function createGenerateHighwayJob(request, reply) {
-  const userId = request.user.id;
   let mp3Url;
   let name;
 
@@ -32,14 +31,14 @@ export async function createGenerateHighwayJob(request, reply) {
   }
 
   if (fileBuffer) {
-    mp3Url = await uploadAudioToR2(fileBuffer, filename, userId);
+    mp3Url = await uploadAudioToR2(fileBuffer, filename, 'admin');
   }
 
   const payload = {
     type: 'generate_highway',
     mp3_url: mp3Url,
     name,
-    user_id: userId,
+    user_id: null,
     description: null,
     sort_order: 0,
     download_max_retries: 3,

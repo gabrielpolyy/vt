@@ -11,7 +11,7 @@ import { db } from './db.js';
 import authPlugin from './auth/index.js';
 import voiceProfilePlugin from './voice-profile/index.js';
 import exercisesPlugin from './exercises/index.js';
-import logsPlugin from './logs/index.js';
+import adminPlugin from './admin/index.js';
 import dashboardPlugin from './dashboard/index.js';
 import journeyPlugin from './journey/index.js';
 import jobsPlugin from './jobs/index.js';
@@ -58,8 +58,8 @@ fastify.register(voiceProfilePlugin);
 // Exercises plugin
 fastify.register(exercisesPlugin);
 
-// Logs viewer plugin (admin only)
-fastify.register(logsPlugin);
+// Admin plugin (logs, highway generator, etc.)
+fastify.register(adminPlugin);
 
 // Dashboard plugin
 fastify.register(dashboardPlugin);

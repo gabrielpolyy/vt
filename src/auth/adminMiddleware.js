@@ -1,6 +1,17 @@
 import { db } from '../db.js';
 import { verifyAccessToken } from '../utils/jwt.js';
 
+export async function requireAdminApi(request, reply) {
+  const { rows } = await db.query(
+    'SELECT is_admin FROM users WHERE id = $1',
+    [request.user.id]
+  );
+
+  if (!rows[0]?.is_admin) {
+    return reply.code(403).send({ error: 'Admin access required' });
+  }
+}
+
 export async function requireAdmin(request, reply) {
   // Try to authenticate from Authorization header or cookie
   const authHeader = request.headers.authorization;
@@ -38,7 +49,9 @@ export async function requireAdmin(request, reply) {
 
   if (!rows[0]?.is_admin) {
     // Clear invalid cookie and show login form
-    reply.clearCookie('access_token', { path: '/logs' });
+    // Determine path based on URL
+    const cookiePath = request.url.startsWith('/admin') ? '/admin' : '/logs';
+    reply.clearCookie('access_token', { path: cookiePath });
     request.needsLogin = true;
     request.loginError = 'Admin access required';
     return;

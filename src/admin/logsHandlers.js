@@ -2,10 +2,6 @@ import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
-import { findUserByEmail } from '../users/repository.js';
-import { verifyPassword } from '../utils/password.js';
-import { signAccessToken } from '../utils/jwt.js';
-import { db } from '../db.js';
 import { DEV_LOG_FILE } from '../logging/index.js';
 
 // Default PM2 log paths
@@ -518,7 +514,7 @@ function renderHtml(logs, options = {}) {
   </script>
   <div class="header">
     <h1>Logs Viewer <span class="count">${logs.length} entries</span></h1>
-    <form method="POST" action="/logs/logout" style="margin:0">
+    <form method="POST" action="/admin/logout" style="margin:0">
       <button type="submit" class="logout" style="background:none;border:none;cursor:pointer">Logout</button>
     </form>
   </div>
@@ -635,11 +631,6 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
-function escapeAttr(str) {
-  // Escape for use in onclick attribute - wrap in JSON to preserve the string
-  return JSON.stringify(str).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
-}
-
 function renderLoginForm(error = '') {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -710,7 +701,7 @@ function renderLoginForm(error = '') {
   <div class="login-box">
     <h1>Logs Viewer</h1>
     ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
-    <form method="POST" action="/logs/login">
+    <form method="POST" action="/admin/login">
       <div class="form-group">
         <label for="email">Email</label>
         <input type="email" id="email" name="email" required autofocus>
@@ -727,44 +718,3 @@ function renderLoginForm(error = '') {
 </html>`;
 }
 
-export async function handleLogin(request, reply) {
-  const { email, password } = request.body;
-
-  if (!email || !password) {
-    return reply.type('text/html').send(renderLoginForm('Email and password are required'));
-  }
-
-  const user = await findUserByEmail(email);
-  if (!user || !user.password_hash) {
-    return reply.type('text/html').send(renderLoginForm('Invalid credentials'));
-  }
-
-  const isValid = await verifyPassword(user.password_hash, password);
-  if (!isValid) {
-    return reply.type('text/html').send(renderLoginForm('Invalid credentials'));
-  }
-
-  // Check if user is admin
-  const { rows } = await db.query('SELECT is_admin FROM users WHERE id = $1', [user.id]);
-  if (!rows[0]?.is_admin) {
-    return reply.type('text/html').send(renderLoginForm('Admin access required'));
-  }
-
-  // Generate access token and set cookie
-  const accessToken = signAccessToken({ sub: user.id, email: user.email });
-
-  reply.setCookie('access_token', accessToken, {
-    path: '/logs',
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24, // 24 hours
-  });
-
-  return reply.redirect('/logs');
-}
-
-export async function handleLogout(request, reply) {
-  reply.clearCookie('access_token', { path: '/logs' });
-  return reply.redirect('/logs');
-}
