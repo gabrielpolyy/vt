@@ -9,6 +9,7 @@ import {
 import { getVoiceProfile } from '../voice-profile/repository.js';
 import { transposeForVoiceProfile, getTranspositionDetails, midiToPitch } from './transposition.js';
 import { logTransposition } from '../logging/index.js';
+import { getHighwayAudioUrls } from '../utils/r2.js';
 
 // GET /api/exercises - List all exercises
 export async function listExercises(request, reply) {
@@ -231,5 +232,23 @@ export async function getProgressBySlug(request, reply) {
       createdAt: a.created_at,
     })),
   });
+}
+
+// GET /api/exercises/:slug/audio - Get audio download URLs
+export async function getExerciseAudio(request, reply) {
+  const { slug } = request.params;
+
+  const exercise = await getExerciseBySlug(slug);
+  if (!exercise) {
+    return reply.code(404).send({ error: 'Exercise not found' });
+  }
+
+  const trackId = exercise.definition?.trackId;
+  if (!trackId) {
+    return reply.code(400).send({ error: 'Exercise has no audio track' });
+  }
+
+  const { vocalsUrl, backingUrl } = await getHighwayAudioUrls(trackId);
+  return reply.send({ vocalsUrl, backingUrl });
 }
 

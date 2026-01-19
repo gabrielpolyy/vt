@@ -1,4 +1,4 @@
-import { listExercises, getExercise, createAttempt, listProgress, getProgressBySlug } from './handlers.js';
+import { listExercises, getExercise, createAttempt, listProgress, getProgressBySlug, getExerciseAudio } from './handlers.js';
 import { authenticate } from '../auth/middleware.js';
 
 export default async function exercisesRoutes(fastify) {
@@ -24,6 +24,11 @@ export default async function exercisesRoutes(fastify) {
   // GET /api/exercises/:slug/progress - Get detailed progress for single exercise
   fastify.get('/:slug/progress', {
     handler: getProgressBySlug,
+  });
+
+  // GET /api/exercises/:slug/audio - Get audio download URLs
+  fastify.get('/:slug/audio', {
+    handler: getExerciseAudio,
   });
 
   // POST /api/exercises/:slug/attempts - Record an attempt
