@@ -235,3 +235,4 @@ export async function getProgressBySlug(request, reply) {
     })),
   });
 }
+

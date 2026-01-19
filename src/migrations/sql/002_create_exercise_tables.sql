@@ -4,7 +4,7 @@ CREATE TABLE exercises (
     slug VARCHAR(50) UNIQUE,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     type VARCHAR(20) NOT NULL CHECK (type IN ('pitch', 'highway', 'warmup')),
-    category VARCHAR(30) CHECK (category IN ('pitch_matching', 'scale_runs', 'interval_training', 'highway')),
+    category VARCHAR(30) CHECK (category IN ('pitch_matching', 'scale_runs', 'interval_training', 'highway', 'audio')),
     name VARCHAR(100) NOT NULL,
     description TEXT,
     definition JSONB NOT NULL,
