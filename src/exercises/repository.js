@@ -11,25 +11,30 @@ export async function getExerciseBySlug(slug) {
   return result.rows[0] || null;
 }
 
-// Get all global exercises
-export async function getAllExercises() {
-  const result = await db.query(
-    `SELECT id, slug, type, category, name, description, definition
-     FROM exercises
-     WHERE is_active = TRUE AND user_id IS NULL
-     ORDER BY sort_order, name`
-  );
-  return result.rows;
-}
+// Get exercises with optional type and category filters (excludes full definition blob)
+export async function getExercises({ type, category } = {}) {
+  const conditions = ['is_active = TRUE', 'user_id IS NULL'];
+  const params = [];
 
-// Get exercises by type
-export async function getExercisesByType(type) {
+  if (type) {
+    params.push(type);
+    conditions.push(`type = $${params.length}`);
+  }
+
+  if (category) {
+    params.push(category);
+    conditions.push(`category = $${params.length}`);
+  }
+
   const result = await db.query(
-    `SELECT id, slug, type, category, name, description, definition
+    `SELECT id, slug, type, category, name, description,
+            definition->>'icon' as icon,
+            definition->>'trackId' as "trackId",
+            (definition->>'durationMs')::int as "durationMs"
      FROM exercises
-     WHERE type = $1 AND is_active = TRUE AND user_id IS NULL
+     WHERE ${conditions.join(' AND ')}
      ORDER BY sort_order, name`,
-    [type]
+    params
   );
   return result.rows;
 }

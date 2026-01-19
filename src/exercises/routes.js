@@ -5,7 +5,7 @@ export default async function exercisesRoutes(fastify) {
   // All routes require authentication
   fastify.addHook('preHandler', authenticate);
 
-  // GET /api/exercises - List all exercises (optional ?type= filter)
+  // GET /api/exercises - List all exercises (optional ?type= and ?category= filters)
   fastify.get('/', {
     handler: listExercises,
   });

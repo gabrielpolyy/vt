@@ -1,7 +1,6 @@
 import {
   getExerciseBySlug,
-  getAllExercises,
-  getExercisesByType,
+  getExercises,
   recordAttempt,
   getAllProgress,
   getExerciseProgress,
@@ -13,11 +12,9 @@ import { logTransposition } from '../logging/index.js';
 
 // GET /api/exercises - List all exercises
 export async function listExercises(request, reply) {
-  const { type } = request.query;
+  const { type, category } = request.query;
 
-  const exercises = type
-    ? await getExercisesByType(type)
-    : await getAllExercises();
+  const exercises = await getExercises({ type, category });
 
   return reply.send({ exercises });
 }
