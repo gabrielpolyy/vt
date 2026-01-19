@@ -4,6 +4,7 @@ import fastifyStatic from '@fastify/static';
 import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyCookie from '@fastify/cookie';
 import fastifyFormbody from '@fastify/formbody';
+import fastifyMultipart from '@fastify/multipart';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { db } from './db.js';
@@ -13,6 +14,7 @@ import exercisesPlugin from './exercises/index.js';
 import logsPlugin from './logs/index.js';
 import dashboardPlugin from './dashboard/index.js';
 import journeyPlugin from './journey/index.js';
+import jobsPlugin from './jobs/index.js';
 import { buildLoggerOptions, registerLoggingHooks } from './logging/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,6 +46,9 @@ fastify.register(fastifyCookie);
 // Form body parsing
 fastify.register(fastifyFormbody);
 
+// Multipart support for file uploads
+fastify.register(fastifyMultipart);
+
 // Auth plugin
 fastify.register(authPlugin);
 
@@ -61,6 +66,9 @@ fastify.register(dashboardPlugin);
 
 // Journey plugin
 fastify.register(journeyPlugin);
+
+// Jobs plugin
+fastify.register(jobsPlugin);
 
 // Health check
 fastify.get('/api/health', async () => {
