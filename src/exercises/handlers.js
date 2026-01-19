@@ -47,6 +47,7 @@ export async function getExercise(request, reply) {
         name: exercise.name,
         description: exercise.description,
         type: exercise.type,
+        category: exercise.category,
       },
       voiceProfile: {
         low: midiToPitch(voiceProfile.lowest_midi),
@@ -166,6 +167,7 @@ export async function listProgress(request, reply) {
       exerciseId: row.exercise_id,
       slug: row.slug,
       name: row.name,
+      category: row.category,
       sortOrder: row.sort_order,
       completedCount: row.completed_count,
       bestScore: row.best_score,
@@ -214,6 +216,7 @@ export async function getProgressBySlug(request, reply) {
       slug: exercise.slug,
       name: exercise.name,
       type: exercise.type,
+      category: exercise.category,
     },
     progress: {
       bestScore: progress.best_score,

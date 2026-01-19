@@ -3,7 +3,7 @@ import { db } from '../db.js';
 // Get exercise by slug
 export async function getExerciseBySlug(slug) {
   const result = await db.query(
-    `SELECT id, slug, type, name, description, definition
+    `SELECT id, slug, type, category, name, description, definition
      FROM exercises
      WHERE slug = $1 AND is_active = TRUE AND user_id IS NULL`,
     [slug]
@@ -14,7 +14,7 @@ export async function getExerciseBySlug(slug) {
 // Get all global exercises
 export async function getAllExercises() {
   const result = await db.query(
-    `SELECT id, slug, type, name, description, definition
+    `SELECT id, slug, type, category, name, description, definition
      FROM exercises
      WHERE is_active = TRUE AND user_id IS NULL
      ORDER BY sort_order, name`
@@ -25,7 +25,7 @@ export async function getAllExercises() {
 // Get exercises by type
 export async function getExercisesByType(type) {
   const result = await db.query(
-    `SELECT id, slug, type, name, description, definition
+    `SELECT id, slug, type, category, name, description, definition
      FROM exercises
      WHERE type = $1 AND is_active = TRUE AND user_id IS NULL
      ORDER BY sort_order, name`,
@@ -77,6 +77,7 @@ export async function getAllProgress(userId) {
        e.slug,
        e.name,
        e.type,
+       e.category,
        e.sort_order,
        e.definition,
        COALESCE(p.completed_count, 0) AS completed_count,
