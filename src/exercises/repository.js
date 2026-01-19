@@ -118,3 +118,33 @@ export async function getAttemptHistory(userId, exerciseId, limit = 10) {
   );
   return result.rows;
 }
+
+// Get audio exercises paginated
+export async function getAudioExercisesPaginated(page = 1, limit = 10) {
+  const offset = (page - 1) * limit;
+  const result = await db.query(
+    `SELECT id, name, is_active, created_at
+     FROM exercises
+     WHERE category = 'audio' AND user_id IS NULL
+     ORDER BY created_at DESC
+     LIMIT $1 OFFSET $2`,
+    [limit, offset]
+  );
+  return result.rows;
+}
+
+// Get total count of audio exercises
+export async function getAudioExercisesCount() {
+  const result = await db.query(
+    `SELECT COUNT(*) FROM exercises WHERE category = 'audio' AND user_id IS NULL`
+  );
+  return parseInt(result.rows[0].count, 10);
+}
+
+// Toggle exercise is_active status
+export async function toggleExerciseActive(id) {
+  await db.query(
+    `UPDATE exercises SET is_active = NOT is_active WHERE id = $1`,
+    [id]
+  );
+}

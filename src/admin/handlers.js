@@ -7,6 +7,11 @@ import { uploadAudioToR2 } from '../utils/r2.js';
 import { renderLogin } from './templates/login.js';
 import { renderHome } from './templates/home.js';
 import { renderHighwayForm } from './templates/highway.js';
+import {
+  getAudioExercisesPaginated,
+  getAudioExercisesCount,
+  toggleExerciseActive as toggleExerciseActiveRepo,
+} from '../exercises/repository.js';
 
 export async function getAdminHome(request, reply) {
   if (request.needsLogin) {
@@ -21,7 +26,15 @@ export async function getHighwayForm(request, reply) {
     return reply.type('text/html').send(renderLogin(request.loginError || ''));
   }
 
-  return reply.type('text/html').send(renderHighwayForm());
+  const page = parseInt(request.query.page, 10) || 1;
+  const limit = 10;
+  const [exercises, totalCount] = await Promise.all([
+    getAudioExercisesPaginated(page, limit),
+    getAudioExercisesCount(),
+  ]);
+  const totalPages = Math.ceil(totalCount / limit);
+
+  return reply.type('text/html').send(renderHighwayForm({ exercises, page, totalPages }));
 }
 
 export async function submitHighwayJob(request, reply) {
@@ -134,4 +147,16 @@ export async function handleLogin(request, reply) {
 export async function handleLogout(request, reply) {
   reply.clearCookie('access_token', { path: '/admin' });
   return reply.redirect('/admin');
+}
+
+export async function toggleExerciseActive(request, reply) {
+  if (request.needsLogin) {
+    return reply.type('text/html').send(renderLogin(request.loginError || ''));
+  }
+
+  const { id } = request.params;
+  await toggleExerciseActiveRepo(id);
+
+  const page = request.query.page || 1;
+  return reply.redirect(`/admin/highway?page=${page}`);
 }
