@@ -11,6 +11,8 @@ import {
   getAudioExercisesPaginated,
   getAudioExercisesCount,
   toggleExerciseActive as toggleExerciseActiveRepo,
+  updateExerciseLevel as updateExerciseLevelRepo,
+  updateExerciseGenre as updateExerciseGenreRepo,
 } from '../exercises/repository.js';
 
 export async function getAdminHome(request, reply) {
@@ -156,6 +158,34 @@ export async function toggleExerciseActive(request, reply) {
 
   const { id } = request.params;
   await toggleExerciseActiveRepo(id);
+
+  const page = request.query.page || 1;
+  return reply.redirect(`/admin/highway?page=${page}`);
+}
+
+export async function updateExerciseLevel(request, reply) {
+  if (request.needsLogin) {
+    return reply.type('text/html').send(renderLogin(request.loginError || ''));
+  }
+
+  const { id } = request.params;
+  const { level } = request.body;
+  const levelNum = level ? parseInt(level, 10) : null;
+  await updateExerciseLevelRepo(id, levelNum);
+
+  const page = request.query.page || 1;
+  return reply.redirect(`/admin/highway?page=${page}`);
+}
+
+export async function updateExerciseGenre(request, reply) {
+  if (request.needsLogin) {
+    return reply.type('text/html').send(renderLogin(request.loginError || ''));
+  }
+
+  const { id } = request.params;
+  const { genre } = request.body;
+  const genreValue = genre || null;
+  await updateExerciseGenreRepo(id, genreValue);
 
   const page = request.query.page || 1;
   return reply.redirect(`/admin/highway?page=${page}`);

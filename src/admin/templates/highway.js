@@ -30,6 +30,22 @@ function renderExercisesTable(exercises, page, totalPages) {
         </span>
       </td>
       <td class="py-3 px-4">
+        <form method="POST" action="/admin/highway/${ex.id}/level?page=${page}" class="inline">
+          <select name="level" onchange="this.form.submit()" class="px-2 py-1 text-xs rounded-md bg-slate-700 text-slate-200 border border-slate-600 cursor-pointer">
+            <option value="">-</option>
+            ${[1,2,3,4,5,6,7,8,9,10].map(lvl => `<option value="${lvl}" ${ex.level === lvl ? 'selected' : ''}>${lvl}</option>`).join('')}
+          </select>
+        </form>
+      </td>
+      <td class="py-3 px-4">
+        <form method="POST" action="/admin/highway/${ex.id}/genre?page=${page}" class="inline">
+          <select name="genre" onchange="this.form.submit()" class="px-2 py-1 text-xs rounded-md bg-slate-700 text-slate-200 border border-slate-600 cursor-pointer">
+            <option value="">-</option>
+            ${['pop', 'rock', 'r&b', 'jazz', 'classical', 'country', 'hip-hop', 'electronic', 'folk', 'musical-theater', 'gospel', 'blues'].map(g => `<option value="${g}" ${ex.genre === g ? 'selected' : ''}>${g}</option>`).join('')}
+          </select>
+        </form>
+      </td>
+      <td class="py-3 px-4">
         <form method="POST" action="/admin/highway/${ex.id}/toggle?page=${page}" class="inline">
           <button type="submit" class="px-3 py-1.5 text-xs rounded-md ${ex.is_active ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'}">
             ${ex.is_active ? 'Deactivate' : 'Activate'}
@@ -61,6 +77,8 @@ function renderExercisesTable(exercises, page, totalPages) {
             <th class="py-3 px-4 text-left text-sm font-medium text-slate-400">Name</th>
             <th class="py-3 px-4 text-left text-sm font-medium text-slate-400">Created</th>
             <th class="py-3 px-4 text-left text-sm font-medium text-slate-400">Status</th>
+            <th class="py-3 px-4 text-left text-sm font-medium text-slate-400">Level</th>
+            <th class="py-3 px-4 text-left text-sm font-medium text-slate-400">Genre</th>
             <th class="py-3 px-4 text-left text-sm font-medium text-slate-400">Action</th>
           </tr>
         </thead>

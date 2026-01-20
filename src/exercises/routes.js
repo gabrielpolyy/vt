@@ -1,4 +1,4 @@
-import { listExercises, getExercise, createAttempt, listProgress, getProgressBySlug, getExerciseAudio } from './handlers.js';
+import { listExercises, getExercise, createAttempt, listProgress, getProgressBySlug, getExerciseAudio, toggleFavorite } from './handlers.js';
 import { authenticate } from '../auth/middleware.js';
 
 export default async function exercisesRoutes(fastify) {
@@ -34,5 +34,10 @@ export default async function exercisesRoutes(fastify) {
   // POST /api/exercises/:slug/attempts - Record an attempt
   fastify.post('/:slug/attempts', {
     handler: createAttempt,
+  });
+
+  // POST /api/exercises/:slug/favorite - Toggle favorite status
+  fastify.post('/:slug/favorite', {
+    handler: toggleFavorite,
   });
 }

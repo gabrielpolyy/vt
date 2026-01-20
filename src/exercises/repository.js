@@ -12,28 +12,44 @@ export async function getExerciseBySlug(slug) {
 }
 
 // Get exercises with optional type and category filters (excludes full definition blob)
-export async function getExercises({ type, category } = {}) {
-  const conditions = ['is_active = TRUE', 'user_id IS NULL'];
+export async function getExercises({ type, category, filterOut, userId } = {}) {
+  const conditions = ['e.is_active = TRUE', 'e.user_id IS NULL'];
   const params = [];
 
   if (type) {
     params.push(type);
-    conditions.push(`type = $${params.length}`);
+    conditions.push(`e.type = $${params.length}`);
   }
 
   if (category) {
     params.push(category);
-    conditions.push(`category = $${params.length}`);
+    conditions.push(`e.category = $${params.length}`);
+  }
+
+  if (filterOut) {
+    params.push(filterOut);
+    conditions.push(`e.category != $${params.length}`);
+  }
+
+  // Build favorites join if userId provided
+  let favoritesJoin = '';
+  let isFavoriteSelect = 'FALSE as "isFavorite"';
+  if (userId) {
+    params.push(userId);
+    favoritesJoin = `LEFT JOIN favorites f ON e.id = f.exercise_id AND f.user_id = $${params.length}`;
+    isFavoriteSelect = '(f.id IS NOT NULL) as "isFavorite"';
   }
 
   const result = await db.query(
-    `SELECT id, slug, type, category, name, description,
-            definition->>'icon' as icon,
-            definition->>'trackId' as "trackId",
-            (definition->>'durationMs')::int as "durationMs"
-     FROM exercises
+    `SELECT e.id, e.slug, e.type, e.category, e.name, e.description,
+            e.definition->>'icon' as icon,
+            e.definition->>'trackId' as "trackId",
+            (e.definition->>'durationMs')::int as "durationMs",
+            ${isFavoriteSelect}
+     FROM exercises e
+     ${favoritesJoin}
      WHERE ${conditions.join(' AND ')}
-     ORDER BY sort_order, name`,
+     ORDER BY e.sort_order, e.name`,
     params
   );
   return result.rows;
@@ -128,7 +144,7 @@ export async function getAttemptHistory(userId, exerciseId, limit = 10) {
 export async function getAudioExercisesPaginated(page = 1, limit = 10) {
   const offset = (page - 1) * limit;
   const result = await db.query(
-    `SELECT id, name, is_active, created_at
+    `SELECT id, name, is_active, level, genre, created_at
      FROM exercises
      WHERE category = 'audio' AND user_id IS NULL
      ORDER BY created_at DESC
@@ -152,4 +168,65 @@ export async function toggleExerciseActive(id) {
     `UPDATE exercises SET is_active = NOT is_active WHERE id = $1`,
     [id]
   );
+}
+
+// Update exercise level
+export async function updateExerciseLevel(id, level) {
+  await db.query(
+    `UPDATE exercises SET level = $2 WHERE id = $1`,
+    [id, level]
+  );
+}
+
+// Update exercise genre
+export async function updateExerciseGenre(id, genre) {
+  await db.query(
+    `UPDATE exercises SET genre = $2 WHERE id = $1`,
+    [id, genre]
+  );
+}
+
+// Toggle favorite - inserts if not exists, deletes if exists
+// Returns { isFavorite: boolean }
+export async function toggleFavorite(userId, exerciseId) {
+  const existing = await db.query(
+    `SELECT id FROM favorites WHERE user_id = $1 AND exercise_id = $2`,
+    [userId, exerciseId]
+  );
+
+  if (existing.rows.length > 0) {
+    await db.query(
+      `DELETE FROM favorites WHERE user_id = $1 AND exercise_id = $2`,
+      [userId, exerciseId]
+    );
+    return { isFavorite: false };
+  } else {
+    await db.query(
+      `INSERT INTO favorites (user_id, exercise_id) VALUES ($1, $2)`,
+      [userId, exerciseId]
+    );
+    return { isFavorite: true };
+  }
+}
+
+// Check if exercise is favorited by user
+export async function isFavorite(userId, exerciseId) {
+  const result = await db.query(
+    `SELECT 1 FROM favorites WHERE user_id = $1 AND exercise_id = $2`,
+    [userId, exerciseId]
+  );
+  return result.rows.length > 0;
+}
+
+// Get all user favorites
+export async function getUserFavorites(userId) {
+  const result = await db.query(
+    `SELECT e.id, e.slug, e.name, e.type, e.category, f.created_at as favorited_at
+     FROM favorites f
+     JOIN exercises e ON f.exercise_id = e.id
+     WHERE f.user_id = $1
+     ORDER BY f.created_at DESC`,
+    [userId]
+  );
+  return result.rows;
 }

@@ -5,6 +5,7 @@ import {
   getAllProgress,
   getExerciseProgress,
   getAttemptHistory,
+  toggleFavorite as toggleFavoriteRepo,
 } from './repository.js';
 import { getVoiceProfile } from '../voice-profile/repository.js';
 import { transposeForVoiceProfile, getTranspositionDetails, midiToPitch } from './transposition.js';
@@ -13,9 +14,10 @@ import { getHighwayAudioUrls } from '../utils/r2.js';
 
 // GET /api/exercises - List all exercises
 export async function listExercises(request, reply) {
-  const { type, category } = request.query;
+  const { type, category, filterOut } = request.query;
+  const userId = request.user.id;
 
-  const exercises = await getExercises({ type, category });
+  const exercises = await getExercises({ type, category, filterOut, userId });
 
   return reply.send({ exercises });
 }
@@ -250,5 +252,23 @@ export async function getExerciseAudio(request, reply) {
 
   const { vocalsUrl, backingUrl } = await getHighwayAudioUrls(trackId);
   return reply.send({ vocalsUrl, backingUrl });
+}
+
+// POST /api/exercises/:slug/favorite - Toggle favorite status
+export async function toggleFavorite(request, reply) {
+  const { slug } = request.params;
+  const userId = request.user.id;
+
+  const exercise = await getExerciseBySlug(slug);
+  if (!exercise) {
+    return reply.code(404).send({ error: 'Exercise not found' });
+  }
+
+  const { isFavorite } = await toggleFavoriteRepo(userId, exercise.id);
+
+  return reply.send({
+    exerciseId: exercise.id,
+    isFavorite,
+  });
 }
 

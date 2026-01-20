@@ -10,6 +10,8 @@ CREATE TABLE exercises (
     definition JSONB NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
     sort_order INTEGER DEFAULT 0,
+    level INTEGER,
+    genre VARCHAR(30),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
