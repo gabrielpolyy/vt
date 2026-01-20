@@ -7,6 +7,7 @@ import { uploadAudioToR2 } from '../utils/r2.js';
 import { renderLogin } from './templates/login.js';
 import { renderHome } from './templates/home.js';
 import { renderHighwayForm } from './templates/highway.js';
+import { renderAudioExercises } from './templates/audioExercises.js';
 import {
   getAudioExercisesPaginated,
   getAudioExercisesCount,
@@ -28,6 +29,14 @@ export async function getHighwayForm(request, reply) {
     return reply.type('text/html').send(renderLogin(request.loginError || ''));
   }
 
+  return reply.type('text/html').send(renderHighwayForm());
+}
+
+export async function getAudioExercises(request, reply) {
+  if (request.needsLogin) {
+    return reply.type('text/html').send(renderLogin(request.loginError || ''));
+  }
+
   const page = parseInt(request.query.page, 10) || 1;
   const limit = 10;
   const [exercises, totalCount] = await Promise.all([
@@ -36,7 +45,7 @@ export async function getHighwayForm(request, reply) {
   ]);
   const totalPages = Math.ceil(totalCount / limit);
 
-  return reply.type('text/html').send(renderHighwayForm({ exercises, page, totalPages }));
+  return reply.type('text/html').send(renderAudioExercises({ exercises, page, totalPages }));
 }
 
 export async function submitHighwayJob(request, reply) {
@@ -160,7 +169,7 @@ export async function toggleExerciseActive(request, reply) {
   await toggleExerciseActiveRepo(id);
 
   const page = request.query.page || 1;
-  return reply.redirect(`/admin/highway?page=${page}`);
+  return reply.redirect(`/admin/audio-exercises?page=${page}`);
 }
 
 export async function updateExerciseLevel(request, reply) {
@@ -174,7 +183,7 @@ export async function updateExerciseLevel(request, reply) {
   await updateExerciseLevelRepo(id, levelNum);
 
   const page = request.query.page || 1;
-  return reply.redirect(`/admin/highway?page=${page}`);
+  return reply.redirect(`/admin/audio-exercises?page=${page}`);
 }
 
 export async function updateExerciseGenre(request, reply) {
@@ -188,5 +197,5 @@ export async function updateExerciseGenre(request, reply) {
   await updateExerciseGenreRepo(id, genreValue);
 
   const page = request.query.page || 1;
-  return reply.redirect(`/admin/highway?page=${page}`);
+  return reply.redirect(`/admin/audio-exercises?page=${page}`);
 }

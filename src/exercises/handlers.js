@@ -64,7 +64,10 @@ export async function getExercise(request, reply) {
     logTransposition(request.transpositionLog);
   }
 
-  const definition = transposeForVoiceProfile(exercise.definition, voiceProfile);
+  // Skip transposition for audio exercises - lyrics shouldn't be modified
+  const definition = exercise.category === 'audio'
+    ? exercise.definition
+    : transposeForVoiceProfile(exercise.definition, voiceProfile);
 
   return reply.send(definition);
 }
