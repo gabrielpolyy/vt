@@ -1,5 +1,6 @@
 import { getCompletedWarmups, getExerciseProgressBySlug } from './repository.js';
 import { getUserProgress, getTotalScore } from '../dashboard/repository.js';
+import { getVoiceProfile } from '../voice-profile/repository.js';
 
 // Count total notes in exercise definition
 function countNotes(definition) {
@@ -40,12 +41,22 @@ export async function getJourney(request, reply) {
   const userId = request.user.id;
 
   // Fetch all data in parallel
-  const [progress, score, completedWarmups, exerciseProgressRows] = await Promise.all([
+  const [progress, score, completedWarmups, exerciseProgressRows, voiceProfile] = await Promise.all([
     getUserProgress(userId),
     getTotalScore(userId),
     getCompletedWarmups(userId),
     getExerciseProgressBySlug(userId),
+    getVoiceProfile(userId),
   ]);
+
+  // If voice profile exists, ensure L1N1 is in completedWarmups
+  let finalCompletedWarmups = completedWarmups;
+  if (voiceProfile) {
+    const hasL1N1 = completedWarmups.some((w) => w.level === 1 && w.node === 1);
+    if (!hasL1N1) {
+      finalCompletedWarmups = [{ level: 1, node: 1 }, ...completedWarmups];
+    }
+  }
 
   // Build exercise progress map keyed by slug
   const exerciseProgress = {};
@@ -64,7 +75,7 @@ export async function getJourney(request, reply) {
     currentLevel: progress.level,
     currentNode: progress.node,
     score,
-    completedWarmups,
+    completedWarmups: finalCompletedWarmups,
     exerciseProgress,
   });
 }

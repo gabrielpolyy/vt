@@ -108,6 +108,7 @@ export async function getStats(request, reply) {
       node: progress.node,
       score,
     },
+    hasActivity,
   });
 }
 
