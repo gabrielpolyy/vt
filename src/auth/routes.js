@@ -1,4 +1,4 @@
-import { register, login, appleAuth, refresh, logout, me, guestLogin, claimWithPassword, claimWithApple } from './handlers.js';
+import { register, login, appleAuth, refresh, logout, me, checkEmail, guestLogin, claimWithPassword, claimWithApple } from './handlers.js';
 import { authenticate } from './middleware.js';
 
 export default async function authRoutes(fastify) {
@@ -26,6 +26,11 @@ export default async function authRoutes(fastify) {
   fastify.post('/guest', {
     config: { rateLimit: { max: 10, timeWindow: '15m' } },
     handler: guestLogin,
+  });
+
+  fastify.get('/check-email', {
+    config: { rateLimit: { max: 10, timeWindow: '1m' } },
+    handler: checkEmail,
   });
 
   // Protected routes

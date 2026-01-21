@@ -221,6 +221,17 @@ export async function me(request, reply) {
   };
 }
 
+export async function checkEmail(request, reply) {
+  const { email } = request.query;
+
+  if (!email) {
+    return reply.code(400).send({ error: 'Email is required' });
+  }
+
+  const existingUser = await findUserByEmail(email);
+  return { exists: !!existingUser };
+}
+
 export async function guestLogin(request, reply) {
   const user = await createGuestUser();
 
