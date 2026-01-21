@@ -1,4 +1,4 @@
-import { register, login, appleAuth, refresh, logout, me } from './handlers.js';
+import { register, login, appleAuth, refresh, logout, me, guestLogin, claimWithPassword, claimWithApple } from './handlers.js';
 import { authenticate } from './middleware.js';
 
 export default async function authRoutes(fastify) {
@@ -23,6 +23,11 @@ export default async function authRoutes(fastify) {
     handler: refresh,
   });
 
+  fastify.post('/guest', {
+    config: { rateLimit: { max: 10, timeWindow: '15m' } },
+    handler: guestLogin,
+  });
+
   // Protected routes
   fastify.post('/logout', {
     preHandler: authenticate,
@@ -32,5 +37,15 @@ export default async function authRoutes(fastify) {
   fastify.get('/me', {
     preHandler: authenticate,
     handler: me,
+  });
+
+  fastify.post('/claim', {
+    preHandler: authenticate,
+    handler: claimWithPassword,
+  });
+
+  fastify.post('/claim/apple', {
+    preHandler: authenticate,
+    handler: claimWithApple,
   });
 }

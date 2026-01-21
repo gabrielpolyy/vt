@@ -6,6 +6,7 @@ export function generateTokens(user) {
   const accessToken = signAccessToken({
     sub: user.id,
     email: user.email,
+    isGuest: user.is_guest || false,
   });
 
   const refreshToken = generateRefreshToken();
@@ -32,7 +33,7 @@ export async function saveRefreshToken({ userId, refreshToken, deviceInfo, ipAdd
 export async function findRefreshToken(refreshToken) {
   const tokenHash = hashRefreshToken(refreshToken);
   const { rows } = await db.query(
-    `SELECT rt.*, u.id as user_id, u.email, u.name, u.email_verified
+    `SELECT rt.*, u.id as user_id, u.email, u.name, u.email_verified, u.is_guest
      FROM refresh_tokens rt
      JOIN users u ON u.id = rt.user_id
      WHERE rt.token_hash = $1

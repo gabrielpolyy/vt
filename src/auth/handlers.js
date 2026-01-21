@@ -6,6 +6,9 @@ import {
   createUser,
   findOAuthAccount,
   createOAuthUser,
+  createGuestUser,
+  claimGuestAccount,
+  claimGuestWithOAuth,
 } from '../users/repository.js';
 import {
   generateTokens,
@@ -175,6 +178,7 @@ export async function refresh(request, reply) {
   const user = {
     id: tokenRecord.user_id,
     email: tokenRecord.email,
+    is_guest: tokenRecord.is_guest,
   };
 
   const tokens = generateTokens(user);
@@ -212,6 +216,159 @@ export async function me(request, reply) {
     email: user.email,
     name: user.name,
     emailVerified: user.email_verified,
+    isGuest: user.is_guest,
     createdAt: user.created_at,
+  };
+}
+
+export async function guestLogin(request, reply) {
+  const user = await createGuestUser();
+
+  const tokens = generateTokens(user);
+  await saveRefreshToken({
+    userId: user.id,
+    refreshToken: tokens.refreshToken,
+    deviceInfo: getDeviceInfo(request),
+    ipAddress: request.ip,
+  });
+
+  return reply.code(201).send({
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      isGuest: true,
+    },
+    ...tokens,
+  });
+}
+
+export async function claimWithPassword(request, reply) {
+  const { email, password, name } = request.body;
+  const userId = request.user.id;
+
+  if (!email || !password) {
+    return reply.code(400).send({ error: 'Email and password are required' });
+  }
+
+  if (password.length < authConfig.password.minLength) {
+    return reply.code(400).send({
+      error: `Password must be at least ${authConfig.password.minLength} characters`,
+    });
+  }
+
+  // Check if user is actually a guest
+  const currentUser = await findUserById(userId);
+  if (!currentUser || !currentUser.is_guest) {
+    return reply.code(403).send({ error: 'Only guest accounts can be claimed' });
+  }
+
+  // Check if email is already taken
+  const existingUser = await findUserByEmail(email);
+  if (existingUser) {
+    return reply.code(409).send({ error: 'Email already registered' });
+  }
+
+  const passwordHash = await hashPassword(password);
+  const user = await claimGuestAccount({ userId, email, passwordHash, name });
+
+  if (!user) {
+    return reply.code(500).send({ error: 'Failed to claim account' });
+  }
+
+  // Revoke old tokens and issue new ones
+  await revokeAllUserTokens(userId);
+
+  const tokens = generateTokens(user);
+  await saveRefreshToken({
+    userId: user.id,
+    refreshToken: tokens.refreshToken,
+    deviceInfo: getDeviceInfo(request),
+    ipAddress: request.ip,
+  });
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      isGuest: false,
+    },
+    ...tokens,
+  };
+}
+
+export async function claimWithApple(request, reply) {
+  const { identityToken, user: appleUser } = request.body;
+  const userId = request.user.id;
+
+  if (!identityToken) {
+    return reply.code(400).send({ error: 'Identity token is required' });
+  }
+
+  // Check if user is actually a guest
+  const currentUser = await findUserById(userId);
+  if (!currentUser || !currentUser.is_guest) {
+    return reply.code(403).send({ error: 'Only guest accounts can be claimed' });
+  }
+
+  let applePayload;
+  try {
+    applePayload = await verifyAppleToken(identityToken);
+  } catch (err) {
+    return reply.code(401).send({ error: 'Invalid Apple identity token' });
+  }
+
+  const providerUserId = applePayload.sub;
+  const providerEmail = applePayload.email;
+
+  // Check if this Apple account is already linked to another user
+  const existingOAuth = await findOAuthAccount('apple', providerUserId);
+  if (existingOAuth) {
+    return reply.code(409).send({ error: 'This Apple account is already linked to another user' });
+  }
+
+  // Check if email is already taken (if Apple provided one)
+  if (providerEmail) {
+    const existingUser = await findUserByEmail(providerEmail);
+    if (existingUser) {
+      return reply.code(409).send({ error: 'Email already registered' });
+    }
+  }
+
+  const name = appleUser?.name
+    ? `${appleUser.name.firstName || ''} ${appleUser.name.lastName || ''}`.trim()
+    : null;
+
+  const email = providerEmail || `apple_${providerUserId}@privaterelay.appleid.com`;
+
+  const user = await claimGuestWithOAuth({
+    userId,
+    email,
+    name,
+    provider: 'apple',
+    providerUserId,
+    providerEmail,
+  });
+
+  // Revoke old tokens and issue new ones
+  await revokeAllUserTokens(userId);
+
+  const tokens = generateTokens(user);
+  await saveRefreshToken({
+    userId: user.id,
+    refreshToken: tokens.refreshToken,
+    deviceInfo: getDeviceInfo(request),
+    ipAddress: request.ip,
+  });
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      isGuest: false,
+    },
+    ...tokens,
   };
 }

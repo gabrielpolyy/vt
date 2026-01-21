@@ -1,15 +1,21 @@
 -- Users table
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255),
     email_verified BOOLEAN DEFAULT FALSE,
     password_hash VARCHAR(255),
     name VARCHAR(255),
     level INTEGER NOT NULL DEFAULT 1,
     node INTEGER NOT NULL DEFAULT 1,
+    is_guest BOOLEAN NOT NULL DEFAULT FALSE,
+    last_active_at TIMESTAMPTZ DEFAULT NOW(),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Partial unique: email unique only for non-guest accounts
+CREATE UNIQUE INDEX idx_users_email_unique
+ON users(email) WHERE email IS NOT NULL AND is_guest = FALSE;
 
 -- OAuth providers (Apple, etc.)
 CREATE TABLE oauth_accounts (
@@ -35,7 +41,8 @@ CREATE TABLE refresh_tokens (
 );
 
 -- Indexes
-CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_email ON users(email) WHERE email IS NOT NULL;
+CREATE INDEX idx_users_guest_inactive ON users(last_active_at) WHERE is_guest = TRUE;
 CREATE INDEX idx_oauth_accounts_user_id ON oauth_accounts(user_id);
 CREATE INDEX idx_oauth_accounts_provider_lookup ON oauth_accounts(provider, provider_user_id);
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);

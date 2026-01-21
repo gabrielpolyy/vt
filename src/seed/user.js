@@ -8,6 +8,7 @@ const users = [
     isAdmin: false,
     level: 2,
     node: 2,
+    isGuest: false,
   },
   {
     email: 'gabriel.policiuc@outlook.com',
@@ -16,6 +17,7 @@ const users = [
     isAdmin: true,
     level: 1,
     node: 1,
+    isGuest: false,
   },
 ];
 
@@ -34,10 +36,10 @@ export async function seed(db) {
 
     // Insert user
     const result = await db.query(
-      `INSERT INTO users (email, email_verified, password_hash, name, is_admin, level, node)
-       VALUES ($1, true, $2, $3, $4, $5, $6)
-       RETURNING id, email, name, is_admin, level, node`,
-      [user.email, passwordHash, user.name, user.isAdmin, user.level, user.node]
+      `INSERT INTO users (email, email_verified, password_hash, name, is_admin, level, node, is_guest)
+       VALUES ($1, true, $2, $3, $4, $5, $6, $7)
+       RETURNING id, email, name, is_admin, level, node, is_guest`,
+      [user.email, passwordHash, user.name, user.isAdmin, user.level, user.node, user.isGuest]
     );
 
     const adminLabel = result.rows[0].is_admin ? ' (admin)' : '';
