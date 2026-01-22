@@ -174,11 +174,14 @@ export async function refresh(request, reply) {
   // Revoke old token (rotation)
   await revokeRefreshToken(refreshToken);
 
-  // Generate new tokens
+  // Generate new tokens with subscription data
   const user = {
     id: tokenRecord.user_id,
     email: tokenRecord.email,
     is_guest: tokenRecord.is_guest,
+    tier: tokenRecord.tier,
+    subscription_valid_until: tokenRecord.subscription_valid_until,
+    entitlement_version: tokenRecord.entitlement_version,
   };
 
   const tokens = generateTokens(user);
@@ -189,7 +192,11 @@ export async function refresh(request, reply) {
     ipAddress: request.ip,
   });
 
-  return tokens;
+  return {
+    ...tokens,
+    tier: user.tier,
+    subscriptionValidUntil: user.subscription_valid_until,
+  };
 }
 
 export async function logout(request) {
@@ -217,6 +224,9 @@ export async function me(request, reply) {
     name: user.name,
     emailVerified: user.email_verified,
     isGuest: user.is_guest,
+    tier: user.tier,
+    subscriptionValidUntil: user.subscription_valid_until,
+    appAccountToken: user.app_account_token,
     createdAt: user.created_at,
   };
 }

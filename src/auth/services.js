@@ -7,6 +7,11 @@ export function generateTokens(user) {
     sub: user.id,
     email: user.email,
     isGuest: user.is_guest || false,
+    tier: user.tier || 'free',
+    subValidUntil: user.subscription_valid_until
+      ? Math.floor(new Date(user.subscription_valid_until).getTime() / 1000)
+      : null,
+    entV: user.entitlement_version || 1,
   });
 
   const refreshToken = generateRefreshToken();
@@ -33,7 +38,8 @@ export async function saveRefreshToken({ userId, refreshToken, deviceInfo, ipAdd
 export async function findRefreshToken(refreshToken) {
   const tokenHash = hashRefreshToken(refreshToken);
   const { rows } = await db.query(
-    `SELECT rt.*, u.id as user_id, u.email, u.name, u.email_verified, u.is_guest
+    `SELECT rt.*, u.id as user_id, u.email, u.name, u.email_verified, u.is_guest,
+            u.tier, u.subscription_valid_until, u.entitlement_version, u.app_account_token
      FROM refresh_tokens rt
      JOIN users u ON u.id = rt.user_id
      WHERE rt.token_hash = $1

@@ -15,4 +15,11 @@ export const authConfig = {
     clientId: process.env.APPLE_CLIENT_ID,
     teamId: process.env.APPLE_TEAM_ID,
   },
+  appleAppStore: {
+    bundleId: process.env.APPLE_BUNDLE_ID,
+    issuerId: process.env.APPLE_ISSUER_ID,
+    keyId: process.env.APPLE_KEY_ID,
+    privateKey: process.env.APPLE_PRIVATE_KEY,
+    environment: process.env.NODE_ENV === 'production' ? 'Production' : 'Sandbox',
+  },
 };

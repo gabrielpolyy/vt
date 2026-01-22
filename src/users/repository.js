@@ -10,7 +10,9 @@ export async function findUserByEmail(email) {
 
 export async function findUserById(id) {
   const { rows } = await db.query(
-    'SELECT id, email, email_verified, name, is_guest, created_at, updated_at FROM users WHERE id = $1',
+    `SELECT id, email, email_verified, name, is_guest, tier, subscription_valid_until,
+            entitlement_version, app_account_token, created_at, updated_at
+     FROM users WHERE id = $1`,
     [id]
   );
   return rows[0] || null;
@@ -142,4 +144,46 @@ export async function deleteInactiveGuests(inactiveDays = 30) {
     [inactiveDays]
   );
   return rowCount;
+}
+
+// Subscription-related functions
+export async function findUserByAppAccountToken(appAccountToken) {
+  const { rows } = await db.query(
+    `SELECT id, email, email_verified, name, is_guest, tier, subscription_valid_until,
+            entitlement_version, app_account_token, created_at, updated_at
+     FROM users WHERE app_account_token = $1`,
+    [appAccountToken]
+  );
+  return rows[0] || null;
+}
+
+export async function updateUserTier({ userId, tier, subscriptionValidUntil }) {
+  const { rows } = await db.query(
+    `UPDATE users
+     SET tier = $2, subscription_valid_until = $3, entitlement_version = entitlement_version + 1, updated_at = NOW()
+     WHERE id = $1
+     RETURNING id, email, email_verified, name, is_guest, tier, subscription_valid_until,
+               entitlement_version, app_account_token, created_at, updated_at`,
+    [userId, tier, subscriptionValidUntil]
+  );
+  return rows[0] || null;
+}
+
+export async function incrementEntitlementVersion(userId) {
+  const { rows } = await db.query(
+    `UPDATE users
+     SET entitlement_version = entitlement_version + 1, updated_at = NOW()
+     WHERE id = $1
+     RETURNING entitlement_version`,
+    [userId]
+  );
+  return rows[0]?.entitlement_version || null;
+}
+
+export async function getUserEntitlementVersion(userId) {
+  const { rows } = await db.query(
+    'SELECT entitlement_version FROM users WHERE id = $1',
+    [userId]
+  );
+  return rows[0]?.entitlement_version || null;
 }
