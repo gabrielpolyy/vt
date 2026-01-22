@@ -78,7 +78,7 @@ export async function getJourney(request, reply) {
     const maxScore = computeMaxScore(row.definition);
     const stars = computeStars(row.best_score, maxScore);
     exerciseProgress[row.slug] = {
-      bestScore: row.best_score,
+      bestScore: row.best_score ?? 0,
       maxScore,
       stars,
       completed: stars >= 1,

@@ -6,6 +6,7 @@ import {
   createUser,
   findOAuthAccount,
   createOAuthUser,
+  linkOAuthAccount,
   createGuestUser,
   claimGuestAccount,
   claimGuestWithOAuth,
@@ -123,21 +124,36 @@ export async function appleAuth(request, reply) {
       name: oauthAccount.name,
     };
   } else {
-    // Create new user
     const name = appleUser?.name
       ? `${appleUser.name.firstName || ''} ${appleUser.name.lastName || ''}`.trim()
       : null;
 
     const email = providerEmail || `apple_${providerUserId}@privaterelay.appleid.com`;
 
-    user = await createOAuthUser({
-      email,
-      name,
-      provider: 'apple',
-      providerUserId,
-      providerEmail,
-    });
-    isNewUser = true;
+    // Check if user exists with this email (e.g., registered with email/password)
+    const existingUser = await findUserByEmail(email);
+
+    if (existingUser) {
+      // Link Apple account to existing user
+      await linkOAuthAccount({
+        userId: existingUser.id,
+        provider: 'apple',
+        providerUserId,
+        providerEmail,
+      });
+      user = existingUser;
+      isNewUser = false;
+    } else {
+      // Create new user with Apple account
+      user = await createOAuthUser({
+        email,
+        name,
+        provider: 'apple',
+        providerUserId,
+        providerEmail,
+      });
+      isNewUser = true;
+    }
   }
 
   const tokens = generateTokens(user);
