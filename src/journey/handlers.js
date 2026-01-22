@@ -2,6 +2,19 @@ import { getCompletedWarmups, getExerciseProgressBySlug } from './repository.js'
 import { getUserProgress, getTotalScore } from '../dashboard/repository.js';
 import { getVoiceProfile } from '../voice-profile/repository.js';
 
+// Access level helpers
+const ACCESS_HIERARCHY = { guest: 0, registered: 1, premium: 2 };
+
+function getUserAccessLevel(user) {
+  if (user.isGuest) return 'guest';
+  if (user.tier === 'premium') return 'premium';
+  return 'registered';
+}
+
+function hasAccess(userLevel, exerciseLevel) {
+  return ACCESS_HIERARCHY[userLevel] >= ACCESS_HIERARCHY[exerciseLevel];
+}
+
 // Count total notes in exercise definition
 function countNotes(definition) {
   // Regular exercises: count notes in steps
@@ -39,6 +52,7 @@ function computeStars(score, maxScore) {
 // GET /api/journey - Get complete journey/skill tree data
 export async function getJourney(request, reply) {
   const userId = request.user.id;
+  const userLevel = getUserAccessLevel(request.user);
 
   // Fetch all data in parallel
   const [progress, score, completedWarmups, exerciseProgressRows, voiceProfile] = await Promise.all([
@@ -68,6 +82,8 @@ export async function getJourney(request, reply) {
       maxScore,
       stars,
       completed: stars >= 1,
+      accessLevel: row.access_level,
+      isLocked: !hasAccess(userLevel, row.access_level),
     };
   }
 

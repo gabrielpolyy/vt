@@ -12,13 +12,22 @@ export async function getCompletedWarmups(userId) {
   return result.rows.map((row) => ({ level: row.level, node: row.node }));
 }
 
-// Get exercise progress keyed by slug
+// Get exercise progress keyed by slug (with effective access level computed for audio exercises)
+// Returns ALL active exercises, not just those with user progress
 export async function getExerciseProgressBySlug(userId) {
   const result = await db.query(
-    `SELECT e.slug, p.best_score, p.completed_count, e.definition
-     FROM exercise_progress p
-     JOIN exercises e ON p.exercise_id = e.id
-     WHERE p.user_id = $1`,
+    `SELECT e.slug, p.best_score, p.completed_count, e.definition,
+            CASE
+              WHEN e.category = 'audio' AND e.sort_order = (
+                SELECT MIN(sort_order) FROM exercises
+                WHERE category = 'audio' AND user_id IS NULL AND is_active = TRUE
+              ) THEN 'registered'
+              WHEN e.category = 'audio' THEN 'premium'
+              ELSE e.access_level
+            END AS access_level
+     FROM exercises e
+     LEFT JOIN exercise_progress p ON p.exercise_id = e.id AND p.user_id = $1
+     WHERE e.user_id IS NULL AND e.is_active = TRUE`,
     [userId]
   );
   return result.rows;

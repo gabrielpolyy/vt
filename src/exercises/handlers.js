@@ -12,25 +12,61 @@ import { transposeForVoiceProfile, getTranspositionDetails, midiToPitch } from '
 import { logTransposition } from '../logging/index.js';
 import { getHighwayAudioUrls } from '../utils/r2.js';
 
-// GET /api/exercises - List all exercises
+// Access level helpers
+const ACCESS_HIERARCHY = { guest: 0, registered: 1, premium: 2 };
+
+function getUserAccessLevel(user) {
+  if (user.isGuest) return 'guest';
+  if (user.tier === 'premium') return 'premium';
+  return 'registered';
+}
+
+function hasAccess(userLevel, exerciseLevel) {
+  return ACCESS_HIERARCHY[userLevel] >= ACCESS_HIERARCHY[exerciseLevel];
+}
+
+function getUpgradeReason(user, requiredLevel) {
+  if (user.isGuest) return 'account_required';
+  return 'premium_required';
+}
+
+// GET /api/exercises - List all exercises with access level info
 export async function listExercises(request, reply) {
   const { type, category, filterOut } = request.query;
   const userId = request.user.id;
+  const userLevel = getUserAccessLevel(request.user);
 
   const exercises = await getExercises({ type, category, filterOut, userId });
 
-  return reply.send({ exercises });
+  // Add isLocked field based on user's access level
+  const exercisesWithAccess = exercises.map((ex) => ({
+    ...ex,
+    accessLevel: ex.access_level,
+    isLocked: !hasAccess(userLevel, ex.access_level),
+  }));
+
+  return reply.send({ exercises: exercisesWithAccess });
 }
 
 // GET /api/exercises/:slug - Get exercise by slug
 export async function getExercise(request, reply) {
   const { slug } = request.params;
   const userId = request.user.id;
+  const userLevel = getUserAccessLevel(request.user);
 
   const exercise = await getExerciseBySlug(slug);
 
   if (!exercise) {
     return reply.code(404).send({ error: 'Exercise not found' });
+  }
+
+  // Check access level
+  if (!hasAccess(userLevel, exercise.access_level)) {
+    return reply.code(403).send({
+      error: 'Upgrade required to access this exercise',
+      reason: getUpgradeReason(request.user, exercise.access_level),
+      requiredLevel: exercise.access_level,
+    });
   }
 
   // Get user's voice profile and transpose exercise
@@ -100,6 +136,7 @@ function computeStars(score, maxScore) {
 export async function createAttempt(request, reply) {
   const { slug } = request.params;
   const userId = request.user.id;
+  const userLevel = getUserAccessLevel(request.user);
   const { score, completed, result } = request.body;
 
   if (score == null) {
@@ -113,6 +150,15 @@ export async function createAttempt(request, reply) {
   const exercise = await getExerciseBySlug(slug);
   if (!exercise) {
     return reply.code(404).send({ error: 'Exercise not found' });
+  }
+
+  // Check access level
+  if (!hasAccess(userLevel, exercise.access_level)) {
+    return reply.code(403).send({
+      error: 'Upgrade required to access this exercise',
+      reason: getUpgradeReason(request.user, exercise.access_level),
+      requiredLevel: exercise.access_level,
+    });
   }
 
   const maxScore = computeMaxScore(exercise.definition);
@@ -152,6 +198,7 @@ export async function createAttempt(request, reply) {
 // GET /api/exercises/progress - Get progress for all exercises
 export async function listProgress(request, reply) {
   const userId = request.user.id;
+  const userLevel = getUserAccessLevel(request.user);
 
   const allProgress = await getAllProgress(userId);
 
@@ -165,6 +212,7 @@ export async function listProgress(request, reply) {
     }
 
     const maxScore = computeMaxScore(row.definition);
+    const isLocked = !hasAccess(userLevel, row.access_level);
 
     progressByType[type].push({
       exerciseId: row.exercise_id,
@@ -172,6 +220,8 @@ export async function listProgress(request, reply) {
       name: row.name,
       category: row.category,
       sortOrder: row.sort_order,
+      accessLevel: row.access_level,
+      isLocked,
       completedCount: row.completed_count,
       bestScore: row.best_score,
       maxScore,
@@ -181,6 +231,7 @@ export async function listProgress(request, reply) {
   }
 
   // Compute unlock status: first exercise always accessible, subsequent ones need previous to have 1+ star
+  // Note: isAccessible is about progression unlock, isLocked is about tier access
   for (const type of Object.keys(progressByType)) {
     const exercises = progressByType[type];
     exercises.sort((a, b) => a.sortOrder - b.sortOrder);
@@ -197,11 +248,21 @@ export async function listProgress(request, reply) {
 export async function getProgressBySlug(request, reply) {
   const { slug } = request.params;
   const userId = request.user.id;
+  const userLevel = getUserAccessLevel(request.user);
   const limit = parseInt(request.query.limit) || 10;
 
   const exercise = await getExerciseBySlug(slug);
   if (!exercise) {
     return reply.code(404).send({ error: 'Exercise not found' });
+  }
+
+  // Check access level
+  if (!hasAccess(userLevel, exercise.access_level)) {
+    return reply.code(403).send({
+      error: 'Upgrade required to access this exercise',
+      reason: getUpgradeReason(request.user, exercise.access_level),
+      requiredLevel: exercise.access_level,
+    });
   }
 
   const maxScore = computeMaxScore(exercise.definition);
@@ -242,10 +303,20 @@ export async function getProgressBySlug(request, reply) {
 // GET /api/exercises/:slug/audio - Get audio download URLs
 export async function getExerciseAudio(request, reply) {
   const { slug } = request.params;
+  const userLevel = getUserAccessLevel(request.user);
 
   const exercise = await getExerciseBySlug(slug);
   if (!exercise) {
     return reply.code(404).send({ error: 'Exercise not found' });
+  }
+
+  // Check access level
+  if (!hasAccess(userLevel, exercise.access_level)) {
+    return reply.code(403).send({
+      error: 'Upgrade required to access this exercise',
+      reason: getUpgradeReason(request.user, exercise.access_level),
+      requiredLevel: exercise.access_level,
+    });
   }
 
   const trackId = exercise.definition?.trackId;
@@ -261,10 +332,20 @@ export async function getExerciseAudio(request, reply) {
 export async function toggleFavorite(request, reply) {
   const { slug } = request.params;
   const userId = request.user.id;
+  const userLevel = getUserAccessLevel(request.user);
 
   const exercise = await getExerciseBySlug(slug);
   if (!exercise) {
     return reply.code(404).send({ error: 'Exercise not found' });
+  }
+
+  // Check access level - users can only favorite exercises they have access to
+  if (!hasAccess(userLevel, exercise.access_level)) {
+    return reply.code(403).send({
+      error: 'Upgrade required to access this exercise',
+      reason: getUpgradeReason(request.user, exercise.access_level),
+      requiredLevel: exercise.access_level,
+    });
   }
 
   const { isFavorite } = await toggleFavoriteRepo(userId, exercise.id);

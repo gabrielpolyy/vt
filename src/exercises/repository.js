@@ -1,9 +1,17 @@
 import { db } from '../db.js';
 
-// Get exercise by slug
+// Get exercise by slug (with effective access level computed for audio exercises)
 export async function getExerciseBySlug(slug) {
   const result = await db.query(
-    `SELECT id, slug, type, category, name, description, definition
+    `SELECT id, slug, type, category, name, description, definition,
+            CASE
+              WHEN category = 'audio' AND sort_order = (
+                SELECT MIN(sort_order) FROM exercises
+                WHERE category = 'audio' AND user_id IS NULL AND is_active = TRUE
+              ) THEN 'registered'
+              WHEN category = 'audio' THEN 'premium'
+              ELSE access_level
+            END AS access_level
      FROM exercises
      WHERE slug = $1 AND is_active = TRUE AND user_id IS NULL`,
     [slug]
@@ -45,6 +53,14 @@ export async function getExercises({ type, category, filterOut, userId } = {}) {
             e.definition->>'icon' as icon,
             e.definition->>'trackId' as "trackId",
             (e.definition->>'durationMs')::int as "durationMs",
+            CASE
+              WHEN e.category = 'audio' AND e.sort_order = (
+                SELECT MIN(sort_order) FROM exercises
+                WHERE category = 'audio' AND user_id IS NULL AND is_active = TRUE
+              ) THEN 'registered'
+              WHEN e.category = 'audio' THEN 'premium'
+              ELSE e.access_level
+            END AS access_level,
             ${isFavoriteSelect}
      FROM exercises e
      ${favoritesJoin}
@@ -90,7 +106,7 @@ export async function recordAttempt(userId, exerciseId, { score, completed, resu
   }
 }
 
-// Get progress for all exercises for a user
+// Get progress for all exercises for a user (with effective access level computed for audio exercises)
 export async function getAllProgress(userId) {
   const result = await db.query(
     `SELECT
@@ -101,6 +117,14 @@ export async function getAllProgress(userId) {
        e.category,
        e.sort_order,
        e.definition,
+       CASE
+         WHEN e.category = 'audio' AND e.sort_order = (
+           SELECT MIN(sort_order) FROM exercises
+           WHERE category = 'audio' AND user_id IS NULL AND is_active = TRUE
+         ) THEN 'registered'
+         WHEN e.category = 'audio' THEN 'premium'
+         ELSE e.access_level
+       END AS access_level,
        COALESCE(p.completed_count, 0) AS completed_count,
        p.best_score,
        p.last_played_at

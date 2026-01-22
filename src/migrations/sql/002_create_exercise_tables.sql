@@ -12,12 +12,15 @@ CREATE TABLE exercises (
     sort_order INTEGER DEFAULT 0,
     level INTEGER,
     genre VARCHAR(30),
+    access_level VARCHAR(15) NOT NULL DEFAULT 'premium'
+        CHECK (access_level IN ('guest', 'registered', 'premium')),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_exercises_global ON exercises(sort_order) WHERE user_id IS NULL;
 CREATE INDEX idx_exercises_user ON exercises(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX idx_exercises_access_level ON exercises(access_level) WHERE user_id IS NULL;
 
 CREATE TRIGGER exercises_updated_at
     BEFORE UPDATE ON exercises
