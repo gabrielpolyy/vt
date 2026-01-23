@@ -190,3 +190,14 @@ export async function getUserEntitlementVersion(userId) {
   );
   return rows[0]?.entitlement_version || null;
 }
+
+export async function updateUserName(userId, name) {
+  const { rows } = await db.query(
+    `UPDATE users
+     SET name = $2, updated_at = NOW()
+     WHERE id = $1
+     RETURNING id, email, name`,
+    [userId, name]
+  );
+  return rows[0] || null;
+}

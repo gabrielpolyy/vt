@@ -17,6 +17,7 @@ import journeyPlugin from './journey/index.js';
 import jobsPlugin from './jobs/index.js';
 import legalPlugin from './legal/index.js';
 import subscriptionsPlugin from './subscriptions/index.js';
+import usersPlugin from './users/index.js';
 import { buildLoggerOptions, registerLoggingHooks } from './logging/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -77,6 +78,9 @@ fastify.register(legalPlugin);
 
 // Subscriptions plugin (Apple IAP)
 fastify.register(subscriptionsPlugin);
+
+// Users plugin
+fastify.register(usersPlugin);
 
 // Health check
 fastify.get('/api/health', async () => {
