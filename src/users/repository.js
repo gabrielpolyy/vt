@@ -1,5 +1,7 @@
 import { db } from '../db.js';
 
+const DEFAULT_NAME = 'J Doe';
+
 export async function findUserByEmail(email) {
   const { rows } = await db.query(
     'SELECT * FROM users WHERE email = $1',
@@ -23,7 +25,7 @@ export async function createUser({ email, passwordHash, name }) {
     `INSERT INTO users (email, password_hash, name)
      VALUES ($1, $2, $3)
      RETURNING id, email, email_verified, name, created_at, updated_at`,
-    [email.toLowerCase(), passwordHash, name || null]
+    [email.toLowerCase(), passwordHash, name || DEFAULT_NAME]
   );
   return rows[0];
 }
@@ -48,7 +50,7 @@ export async function createOAuthUser({ email, name, provider, providerUserId, p
       `INSERT INTO users (email, email_verified, name)
        VALUES ($1, TRUE, $2)
        RETURNING id, email, email_verified, name, created_at, updated_at`,
-      [email.toLowerCase(), name || null]
+      [email.toLowerCase(), name || DEFAULT_NAME]
     );
     const user = userRows[0];
 
@@ -78,9 +80,10 @@ export async function linkOAuthAccount({ userId, provider, providerUserId, provi
 
 export async function createGuestUser() {
   const { rows } = await db.query(
-    `INSERT INTO users (is_guest)
-     VALUES (TRUE)
-     RETURNING id, email, email_verified, name, is_guest, created_at, updated_at`
+    `INSERT INTO users (is_guest, name)
+     VALUES (TRUE, $1)
+     RETURNING id, email, email_verified, name, is_guest, created_at, updated_at`,
+    [DEFAULT_NAME]
   );
   return rows[0];
 }
@@ -91,7 +94,7 @@ export async function claimGuestAccount({ userId, email, passwordHash, name }) {
      SET email = $2, password_hash = $3, name = $4, is_guest = FALSE, updated_at = NOW()
      WHERE id = $1 AND is_guest = TRUE
      RETURNING id, email, email_verified, name, is_guest, created_at, updated_at`,
-    [userId, email.toLowerCase(), passwordHash, name || null]
+    [userId, email.toLowerCase(), passwordHash, name || DEFAULT_NAME]
   );
   return rows[0] || null;
 }
@@ -106,7 +109,7 @@ export async function claimGuestWithOAuth({ userId, email, name, provider, provi
        SET email = $2, email_verified = TRUE, name = $3, is_guest = FALSE, updated_at = NOW()
        WHERE id = $1 AND is_guest = TRUE
        RETURNING id, email, email_verified, name, is_guest, created_at, updated_at`,
-      [userId, email.toLowerCase(), name || null]
+      [userId, email.toLowerCase(), name || DEFAULT_NAME]
     );
 
     if (!userRows[0]) {

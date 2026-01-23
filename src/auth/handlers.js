@@ -24,8 +24,8 @@ import { verifyAppleToken } from './apple.js';
 export async function register(request, reply) {
   const { email, password, name } = request.body;
 
-  if (!email || !password) {
-    return reply.code(400).send({ error: 'Email and password are required' });
+  if (!email || !password || !name) {
+    return reply.code(400).send({ error: 'Email, password, and name are required' });
   }
 
   if (password.length < authConfig.password.minLength) {
@@ -284,8 +284,8 @@ export async function claimWithPassword(request, reply) {
   const { email, password, name } = request.body;
   const userId = request.user.id;
 
-  if (!email || !password) {
-    return reply.code(400).send({ error: 'Email and password are required' });
+  if (!email || !password || !name) {
+    return reply.code(400).send({ error: 'Email, password, and name are required' });
   }
 
   if (password.length < authConfig.password.minLength) {

@@ -4,7 +4,7 @@ CREATE TABLE users (
     email VARCHAR(255),
     email_verified BOOLEAN DEFAULT FALSE,
     password_hash VARCHAR(255),
-    name VARCHAR(255),
+    name VARCHAR(255) NOT NULL,
     level INTEGER NOT NULL DEFAULT 1,
     node INTEGER NOT NULL DEFAULT 1,
     is_guest BOOLEAN NOT NULL DEFAULT FALSE,
