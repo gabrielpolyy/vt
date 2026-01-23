@@ -59,6 +59,45 @@ def resize_icon(img: Image.Image, size: int, preserve_transparency: bool) -> Ima
     return resized
 
 
+def create_logo_with_black_bg(img: Image.Image, size: int, tolerance: int = 30) -> Image.Image:
+    """Create logo by replacing the background color with black.
+
+    Detects background color from corners and replaces similar colors with black.
+    """
+    resized = img.resize((size, size), Image.Resampling.LANCZOS)
+
+    if resized.mode != "RGBA":
+        resized = resized.convert("RGBA")
+
+    pixels = resized.load()
+    width, height = resized.size
+
+    # Sample background color from corners
+    corner_pixels = [
+        pixels[0, 0],
+        pixels[width - 1, 0],
+        pixels[0, height - 1],
+        pixels[width - 1, height - 1],
+    ]
+
+    # Average the corner colors (use first 3 channels: RGB)
+    bg_r = sum(p[0] for p in corner_pixels) // 4
+    bg_g = sum(p[1] for p in corner_pixels) // 4
+    bg_b = sum(p[2] for p in corner_pixels) // 4
+
+    # Replace background color with black
+    for y in range(height):
+        for x in range(width):
+            r, g, b, a = pixels[x, y]
+            # Check if pixel is close to background color
+            if (abs(r - bg_r) < tolerance and
+                abs(g - bg_g) < tolerance and
+                abs(b - bg_b) < tolerance):
+                pixels[x, y] = (0, 0, 0, a)
+
+    return resized
+
+
 def create_maskable_icon(img: Image.Image, size: int) -> Image.Image:
     """Create maskable icon with safe zone padding (10% on each side)."""
     # Safe zone is 80% of the icon, so we scale the content to fit
@@ -147,6 +186,12 @@ def generate_icons(master_path: Path, output_dir: Path) -> None:
     maskable.save(maskable_path, "PNG", optimize=True)
     print(f"  icon-512-maskable.png (512x512, maskable with padding)")
 
+    # Generate logo with black background
+    logo = create_logo_with_black_bg(master, 192)
+    logo_path = output_dir / "logo.png"
+    logo.save(logo_path, "PNG", optimize=True)
+    print(f"  logo.png (192x192, black background)")
+
     # Generate OG image from master (cropped to 1200x630)
     print("\nGenerating OG image...")
     og_image = resize_og_image(master)
@@ -154,7 +199,7 @@ def generate_icons(master_path: Path, output_dir: Path) -> None:
     og_image.save(og_output, "PNG", optimize=True)
     print(f"  og-image.png ({OG_SIZE[0]}x{OG_SIZE[1]})")
 
-    total_icons = len(ICON_CONFIGS) + 2  # +1 maskable, +1 OG
+    total_icons = len(ICON_CONFIGS) + 3  # +1 maskable, +1 OG, +1 logo
     print(f"\nDone! Generated {total_icons} images in {output_dir}")
 
 
