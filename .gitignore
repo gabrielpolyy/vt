@@ -25,3 +25,8 @@ Thumbs.db
 dist/
 build/
 
+# Python
+.venv/
+__pycache__/
+*.pyc
+
