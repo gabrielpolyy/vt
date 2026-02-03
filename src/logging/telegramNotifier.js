@@ -1,9 +1,19 @@
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
+// Telegram limits
+const MAX_MESSAGE_LENGTH = 3900; // Leave buffer under 4096 limit
+
 // Simple debounce: track last sent messages to avoid spam
 const recentMessages = new Map();
 const DEBOUNCE_MS = 5000; // Don't send same message within 5 seconds
+
+function truncateMessage(message) {
+  if (message.length <= MAX_MESSAGE_LENGTH) {
+    return message;
+  }
+  return message.slice(0, MAX_MESSAGE_LENGTH - 3) + '...';
+}
 
 function isConfigured() {
   return TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID;
@@ -53,8 +63,7 @@ export async function sendTelegramAlert(message) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: TELEGRAM_CHAT_ID,
-        text: message,
-        parse_mode: 'Markdown',
+        text: truncateMessage(message),
       }),
     });
 
@@ -72,15 +81,15 @@ export async function sendTelegramAlert(message) {
 
 export function formatServerError({ method, url, status, ip, error }) {
   const errorMsg = error?.message || error || 'Unknown error';
-  return `🚨 *Server Error*
+  return `🚨 Server Error
 ━━━━━━━━━━━━━━━
-• \`${status}\` ${method} ${url}
+• ${status} ${method} ${url}
 • IP: ${ip || 'unknown'}
 • Error: ${errorMsg}`;
 }
 
 export function formatMobileError({ screen, device, osVersion, appVersion, message, stackTrace }) {
-  let msg = `📱 *Mobile Error*
+  let msg = `📱 Mobile Error
 ━━━━━━━━━━━━━━━
 • Screen: ${screen || 'unknown'}
 • Device: ${device || 'unknown'} (${osVersion || 'unknown'})
@@ -88,9 +97,7 @@ export function formatMobileError({ screen, device, osVersion, appVersion, messa
 • Error: ${message || 'Unknown error'}`;
 
   if (stackTrace) {
-    // Truncate stack trace for Telegram message limits
-    const truncatedStack = stackTrace.slice(0, 300);
-    msg += `\n• Stack: \`${truncatedStack}${stackTrace.length > 300 ? '...' : ''}\``;
+    msg += `\n• Stack: ${stackTrace}`;
   }
 
   return msg;
