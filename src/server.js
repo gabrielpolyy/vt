@@ -18,7 +18,7 @@ import jobsPlugin from './jobs/index.js';
 import legalPlugin from './legal/index.js';
 import subscriptionsPlugin from './subscriptions/index.js';
 import usersPlugin from './users/index.js';
-import { buildLoggerOptions, registerLoggingHooks } from './logging/index.js';
+import { buildLoggerOptions, registerLoggingHooks, mobileLogsRoutes } from './logging/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -81,6 +81,9 @@ fastify.register(subscriptionsPlugin);
 
 // Users plugin
 fastify.register(usersPlugin);
+
+// Mobile logs plugin
+fastify.register(mobileLogsRoutes);
 
 // Health check
 fastify.get('/api/health', async () => {

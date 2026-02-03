@@ -58,3 +58,5 @@ export function buildLoggerOptions() {
 
 export { requestSerializer, responseSerializer, errorSerializer } from './serializers.js';
 export { registerLoggingHooks } from './hooks.js';
+export { default as mobileLogsRoutes } from './mobileLogsRoutes.js';
+export { MOBILE_LOG_FILE } from './mobileLogsHandler.js';
