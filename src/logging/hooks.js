@@ -1,4 +1,5 @@
 import { sanitizeBody, shouldLogRoute } from './serializers.js';
+import { sendTelegramAlert, formatServerError } from './telegramNotifier.js';
 
 // Register request/response logging hooks
 export function registerLoggingHooks(fastify) {
@@ -56,5 +57,19 @@ export function registerLoggingHooks(fastify) {
     const level = reply.statusCode >= 500 ? 'error' : reply.statusCode >= 400 ? 'warn' : 'info';
 
     request.log[level](logData, `${request.method} ${request.url} ${reply.statusCode}`);
+
+    // Send Telegram notification for server errors (5xx)
+    if (reply.statusCode >= 500) {
+      const errorMsg = request._responseBody?.error || request._responseBody?.message || 'Internal server error';
+      sendTelegramAlert(
+        formatServerError({
+          method: request.method,
+          url: request.url,
+          status: reply.statusCode,
+          ip: request.ip,
+          error: errorMsg,
+        })
+      );
+    }
   });
 }

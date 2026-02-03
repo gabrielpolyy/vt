@@ -1,6 +1,7 @@
 import { mkdir, appendFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { sendTelegramAlert, formatMobileError } from './telegramNotifier.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -29,6 +30,21 @@ export async function writeMobileLog(logData) {
     };
 
     await appendFile(MOBILE_LOG_FILE, JSON.stringify(entry) + '\n');
+
+    // Send Telegram notification for mobile errors
+    if (logData.level === 'error') {
+      sendTelegramAlert(
+        formatMobileError({
+          screen: logData.screen,
+          device: logData.deviceModel,
+          osVersion: logData.osVersion,
+          appVersion: logData.appVersion,
+          message: logData.message,
+          stackTrace: logData.stackTrace,
+        })
+      );
+    }
+
     return true;
   } catch (err) {
     console.error('Failed to write mobile log:', err.message);
