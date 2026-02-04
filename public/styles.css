@@ -39,6 +39,13 @@ header {
   margin-bottom: 3rem;
 }
 
+.logo {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 1rem;
+  border-radius: 24px;
+}
+
 h1 {
   font-family: 'JetBrains Mono', monospace;
   font-size: 3.5rem;
