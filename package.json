@@ -16,7 +16,8 @@
     "seed:exercises": "node src/seed/runner.js exercises",
     "seed:voice-profile": "node src/seed/runner.js voice-profile",
     "db:reset": "node src/db-reset.js",
-    "prod": "npm run css:build && node src/server.js"
+    "prod": "npm run css:build && node src/server.js",
+    "deploy": "/opt/apps/vt/scripts/deploy.sh"
   },
   "keywords": [],
   "author": "",
