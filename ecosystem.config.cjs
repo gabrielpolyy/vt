@@ -15,9 +15,7 @@ module.exports = {
       env_development: {
         NODE_ENV: 'development',
       },
-      // Logging
-      error_file: 'logs/pm2-error.log',
-      out_file: 'logs/pm2-out.log',
+      // Logging (uses default ~/.pm2/logs/)
       merge_logs: true,
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       // Restart policy
