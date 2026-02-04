@@ -1,12 +1,13 @@
 import { readFile } from 'fs/promises';
-import { existsSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 import { DEV_LOG_FILE } from '../logging/index.js';
 import { renderLogsLogin, renderLogs } from './templates/logs.js';
 
-// Default PM2 log paths
+// PM2 log directory - default location
 const PM2_LOG_DIR = join(homedir(), '.pm2', 'logs');
+const APP_NAME = 'vt';
 
 // Map log level numbers to names
 const LEVEL_NAMES = {
@@ -76,7 +77,6 @@ async function readLogFile(filePath, limit = 500) {
 }
 
 function findLogFiles() {
-  const appName = process.env.PM2_APP_NAME || 'vt';
   const files = [];
 
   // Check for dev log file first
@@ -84,19 +84,22 @@ function findLogFiles() {
     files.push({ name: 'dev', path: DEV_LOG_FILE });
   }
 
-  // PM2 log files
-  const outLog = join(PM2_LOG_DIR, `${appName}-out.log`);
-  const errLog = join(PM2_LOG_DIR, `${appName}-error.log`);
-
-  if (existsSync(outLog)) files.push({ name: 'stdout', path: outLog });
-  if (existsSync(errLog)) files.push({ name: 'stderr', path: errLog });
-
-  // Also check for numbered instances (PM2 cluster mode)
-  for (let i = 0; i < 10; i++) {
-    const outLogN = join(PM2_LOG_DIR, `${appName}-out-${i}.log`);
-    const errLogN = join(PM2_LOG_DIR, `${appName}-error-${i}.log`);
-    if (existsSync(outLogN)) files.push({ name: `stdout-${i}`, path: outLogN });
-    if (existsSync(errLogN)) files.push({ name: `stderr-${i}`, path: errLogN });
+  // Scan PM2 log directory for any vt-related logs
+  if (existsSync(PM2_LOG_DIR)) {
+    try {
+      const dirFiles = readdirSync(PM2_LOG_DIR);
+      for (const file of dirFiles) {
+        if (file.startsWith(`${APP_NAME}-`) || file.startsWith(`${APP_NAME}.`)) {
+          const filePath = join(PM2_LOG_DIR, file);
+          let name = file.replace(`${APP_NAME}-`, '').replace(`${APP_NAME}.`, '').replace('.log', '');
+          if (file.includes('out')) name = 'stdout';
+          if (file.includes('error')) name = 'stderr';
+          files.push({ name, path: filePath });
+        }
+      }
+    } catch {
+      // Directory read failed
+    }
   }
 
   return files;
