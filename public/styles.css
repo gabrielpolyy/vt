@@ -1,15 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap');
 
 :root {
-  --bg-deep: #0a0a0f;
-  --bg-surface: #12121a;
-  --bg-elevated: #1a1a26;
-  --text-primary: #e8e8ed;
-  --text-muted: #6b6b7a;
-  --accent: #00d4aa;
-  --accent-dim: #00a885;
+  /* PitchHighway Brand Colors */
+  --bg-deep: #0D0D1A;
+  --bg-surface: #14142B;
+  --bg-elevated: #1C1C3D;
+  --text-primary: #FFFFFF;
+  --text-muted: #8B8B9B;
+  --accent: #F5A623;
+  --accent-dim: #D4900F;
+  --accent-hover: #FFB83D;
   --danger: #ff6b6b;
-  --warning: #ffc857;
+  --success: #4ade80;
 }
 
 * {
@@ -23,15 +25,43 @@ body {
   background: var(--bg-deep);
   color: var(--text-primary);
   min-height: 100vh;
-  background-image: 
-    radial-gradient(ellipse at 20% 0%, rgba(0, 212, 170, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(0, 168, 133, 0.05) 0%, transparent 50%);
+  background-image:
+    radial-gradient(ellipse at 30% 0%, rgba(245, 166, 35, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 100%, rgba(245, 166, 35, 0.03) 0%, transparent 50%);
+  position: relative;
+}
+
+/* Starfield effect */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 25% 35%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 45% 8%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 60% 45%, rgba(255,255,255,0.25), transparent),
+    radial-gradient(1px 1px at 75% 20%, rgba(255,255,255,0.35), transparent),
+    radial-gradient(1px 1px at 85% 60%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 15% 70%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 35% 85%, rgba(255,255,255,0.45), transparent),
+    radial-gradient(1px 1px at 55% 65%, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1px 1px at 90% 85%, rgba(255,255,255,0.35), transparent),
+    radial-gradient(1px 1px at 5% 50%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 70% 75%, rgba(255,255,255,0.4), transparent);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .container {
   max-width: 600px;
   margin: 0 auto;
   padding: 4rem 1.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 header {
@@ -42,26 +72,30 @@ header {
 .logo {
   width: 120px;
   height: 120px;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   border-radius: 24px;
 }
 
 h1 {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 3.5rem;
-  font-weight: 600;
+  font-family: 'Outfit', -apple-system, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--text-primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+}
+
+h1 .pitch {
+  color: var(--text-primary);
+}
+
+h1 .highway {
+  color: var(--accent);
 }
 
 .tagline {
   color: var(--text-muted);
-  font-size: 0.95rem;
-  margin-top: 0.5rem;
-  letter-spacing: 0.05em;
+  font-size: 1rem;
+  margin-top: 0.75rem;
+  letter-spacing: 0.02em;
 }
 
 .status-card {
@@ -69,7 +103,7 @@ h1 {
   border: 1px solid var(--bg-elevated);
   border-radius: 16px;
   padding: 1.75rem;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .status-card h2 {
@@ -104,12 +138,57 @@ h1 {
 }
 
 .badge.ok {
-  background: rgba(0, 212, 170, 0.15);
-  color: var(--accent);
+  background: rgba(74, 222, 128, 0.15);
+  color: var(--success);
 }
 
 .badge.error {
   background: rgba(255, 107, 107, 0.15);
   color: var(--danger);
+}
+
+/* CTA buttons */
+.cta-button {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.cta-button.primary {
+  background: var(--accent);
+  color: #1a1a1a;
+}
+
+.cta-button.primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.cta-button.secondary {
+  background: var(--text-primary);
+  color: #1a1a1a;
+}
+
+.cta-button.secondary:hover {
+  background: #e8e8e8;
+  transform: translateY(-1px);
+}
+
+.cta-link {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cta-link:hover {
+  color: var(--accent);
 }
 

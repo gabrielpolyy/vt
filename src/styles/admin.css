@@ -2,6 +2,16 @@
 
 @source "../admin/templates/**/*.js";
 
+/* PitchHighway Brand Colors */
+@theme {
+  --color-brand-gold: #F5A623;
+  --color-brand-gold-hover: #FFB83D;
+  --color-brand-gold-dim: #D4900F;
+  --color-brand-bg: #0D0D1A;
+  --color-brand-surface: #14142B;
+  --color-brand-elevated: #1C1C3D;
+}
+
 /* Custom component classes for form elements that need special styling */
 @layer components {
   /* File input styling */

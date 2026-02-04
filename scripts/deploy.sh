@@ -1,10 +1,14 @@
 #!/bin/bash
+# Server-side deploy script for vt
+# Location on server: /opt/apps/vt/scripts/deploy.sh
+
 set -e
 
 APP_DIR="/opt/apps/vt"
 cd "$APP_DIR"
 
 echo "==> Deploying VT..."
+echo "$(date '+%Y-%m-%d %H:%M:%S')"
 
 echo "[1/4] Pulling latest changes..."
 git pull origin main || { echo "ERROR: git pull failed"; exit 1; }
@@ -23,3 +27,4 @@ pm2 start "$APP_DIR/ecosystem.config.cjs" || { echo "ERROR: PM2 start failed"; e
 pm2 save || { echo "ERROR: PM2 save failed"; exit 1; }
 
 echo "==> Deployment complete!"
+pm2 status vt

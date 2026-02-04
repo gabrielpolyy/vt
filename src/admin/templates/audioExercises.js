@@ -52,14 +52,14 @@ export function renderAudioExercises({ exercises, page, totalPages } = {}) {
 
     const paginationButtons = [];
     if (page > 1) {
-      paginationButtons.push(`<a href="/admin/audio-exercises?page=${page - 1}" class="px-3 py-1.5 text-sm bg-slate-700 text-slate-200 rounded-md hover:bg-slate-600">Prev</a>`);
+      paginationButtons.push(`<a href="/admin/audio-exercises?page=${page - 1}" class="px-3 py-1.5 text-sm bg-brand-elevated text-slate-200 rounded-md hover:bg-brand-gold hover:text-slate-950 transition-colors">Prev</a>`);
     }
     for (let i = 1; i <= totalPages; i++) {
       const isActive = i === page;
-      paginationButtons.push(`<a href="/admin/audio-exercises?page=${i}" class="px-3 py-1.5 text-sm rounded-md ${isActive ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'}">${i}</a>`);
+      paginationButtons.push(`<a href="/admin/audio-exercises?page=${i}" class="px-3 py-1.5 text-sm rounded-md transition-colors ${isActive ? 'bg-brand-gold text-slate-950' : 'bg-brand-elevated text-slate-200 hover:bg-brand-gold hover:text-slate-950'}">${i}</a>`);
     }
     if (page < totalPages) {
-      paginationButtons.push(`<a href="/admin/audio-exercises?page=${page + 1}" class="px-3 py-1.5 text-sm bg-slate-700 text-slate-200 rounded-md hover:bg-slate-600">Next</a>`);
+      paginationButtons.push(`<a href="/admin/audio-exercises?page=${page + 1}" class="px-3 py-1.5 text-sm bg-brand-elevated text-slate-200 rounded-md hover:bg-brand-gold hover:text-slate-950 transition-colors">Next</a>`);
     }
 
     content = `
@@ -74,7 +74,7 @@ export function renderAudioExercises({ exercises, page, totalPages } = {}) {
     title: 'Audio Exercises',
     pageTitle: 'Audio Exercises',
     content: `
-    <div class="bg-slate-800 p-4 sm:p-8 rounded-xl border border-slate-700">
+    <div class="bg-brand-surface p-4 sm:p-8 rounded-xl border border-brand-elevated">
       ${content}
     </div>
     `,

@@ -10,7 +10,7 @@ export function renderHighwayForm({ success, error, jobId } = {}) {
     title: 'Highway Generator',
     pageTitle: 'Highway Generator',
     content: `
-    <div class="bg-slate-800 p-8 rounded-xl border border-slate-700">
+    <div class="bg-brand-surface p-8 rounded-xl border border-brand-elevated">
       ${successMsg}
       ${errorMsg}
 
@@ -18,14 +18,14 @@ export function renderHighwayForm({ success, error, jobId } = {}) {
         <div class="mb-5">
           <label for="name" class="block mb-2 text-sm text-slate-400 font-medium">Name *</label>
           <input type="text" id="name" name="name" required placeholder="Enter highway name"
-            class="w-full p-3 border border-slate-700 rounded-md bg-slate-950 text-slate-200 text-sm focus:outline-none focus:border-blue-500">
+            class="w-full p-3 border border-brand-elevated rounded-md bg-brand-bg text-slate-200 text-sm focus:outline-none focus:border-brand-gold transition-colors">
           <div class="text-xs text-slate-500 mt-1.5">A descriptive name for this highway</div>
         </div>
 
         <div class="mb-5">
           <label for="url" class="block mb-2 text-sm text-slate-400 font-medium">Audio URL</label>
           <input type="url" id="url" name="url" placeholder="https://example.com/audio.mp3"
-            class="w-full p-3 border border-slate-700 rounded-md bg-slate-950 text-slate-200 text-sm focus:outline-none focus:border-blue-500">
+            class="w-full p-3 border border-brand-elevated rounded-md bg-brand-bg text-slate-200 text-sm focus:outline-none focus:border-brand-gold transition-colors">
           <div class="text-xs text-slate-500 mt-1.5">Direct URL to an MP3 file</div>
         </div>
 
@@ -34,12 +34,12 @@ export function renderHighwayForm({ success, error, jobId } = {}) {
         <div class="mb-5">
           <label for="file" class="block mb-2 text-sm text-slate-400 font-medium">Upload Audio File</label>
           <input type="file" id="file" name="file" accept="audio/*"
-            class="file-input w-full p-3 border border-slate-700 rounded-md bg-slate-950 text-slate-200 text-sm">
+            class="file-input w-full p-3 border border-brand-elevated rounded-md bg-brand-bg text-slate-200 text-sm">
           <div class="text-xs text-slate-500 mt-1.5">Upload an audio file (MP3, WAV, etc.)</div>
         </div>
 
         <button type="submit" id="submitBtn"
-          class="w-full p-3.5 bg-blue-500 border-0 rounded-md text-white text-sm font-semibold cursor-pointer hover:bg-blue-600 disabled:bg-slate-700 disabled:cursor-not-allowed">Generate Highway</button>
+          class="w-full p-3.5 bg-brand-gold border-0 rounded-md text-slate-950 text-sm font-semibold cursor-pointer hover:bg-brand-gold-hover disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors">Generate Highway</button>
       </form>
     </div>
 

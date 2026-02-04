@@ -11,22 +11,25 @@ const LEVEL_COLORS = {
 
 export function renderLogsLogin(error = '') {
   return loginLayout({
-    title: 'Logs - Login',
+    title: 'Logs Login',
     error,
     content: `
-    <h1 class="m-0 mb-6 text-2xl text-center">Logs Viewer</h1>
+    <div class="text-center mb-6">
+      <h1 class="m-0 text-2xl"><span class="text-white">Pitch</span><span class="text-brand-gold">Highway</span></h1>
+      <p class="text-slate-500 text-sm mt-1">Logs Viewer</p>
+    </div>
     <form method="POST" action="/admin/login">
       <div class="mb-4">
         <label for="email" class="block mb-1.5 text-sm text-slate-400">Email</label>
         <input type="email" id="email" name="email" required autofocus
-          class="w-full p-3 border border-slate-700 rounded-md bg-slate-950 text-slate-200 text-sm focus:outline-none focus:border-blue-500">
+          class="w-full p-3 border border-brand-elevated rounded-md bg-brand-bg text-slate-200 text-sm focus:outline-none focus:border-brand-gold transition-colors">
       </div>
       <div class="mb-4">
         <label for="password" class="block mb-1.5 text-sm text-slate-400">Password</label>
         <input type="password" id="password" name="password" required
-          class="w-full p-3 border border-slate-700 rounded-md bg-slate-950 text-slate-200 text-sm focus:outline-none focus:border-blue-500">
+          class="w-full p-3 border border-brand-elevated rounded-md bg-brand-bg text-slate-200 text-sm focus:outline-none focus:border-brand-gold transition-colors">
       </div>
-      <button type="submit" class="w-full p-3 bg-blue-500 border-0 rounded-md text-white text-sm font-semibold cursor-pointer mt-2 hover:bg-blue-600">Login</button>
+      <button type="submit" class="w-full p-3 bg-brand-gold border-0 rounded-md text-slate-950 text-sm font-semibold cursor-pointer mt-2 hover:bg-brand-gold-hover transition-colors">Login</button>
     </form>
     <p class="text-xs text-slate-500 text-center mt-4">Admin access required</p>
     `,
@@ -42,18 +45,18 @@ export function renderLogs(logs, options = {}) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Logs Viewer</title>
+  <title>Logs Viewer - PitchHighway</title>
   <link rel="stylesheet" href="/admin.css">
 </head>
-<body class="font-sans bg-slate-950 text-slate-200 m-0 p-5">
+<body class="font-sans bg-brand-bg text-slate-200 m-0 p-5">
   <!-- Modal -->
   <div class="hidden fixed inset-0 bg-black/80 z-50 p-5" id="modal" onclick="if(event.target===this)closeModal()">
-    <div class="bg-slate-800 rounded-xl max-w-4xl w-full max-h-[90vh] flex flex-col m-auto">
-      <div class="flex justify-between items-center px-5 py-4 border-b border-slate-700">
+    <div class="bg-brand-surface rounded-xl max-w-4xl w-full max-h-[90vh] flex flex-col m-auto">
+      <div class="flex justify-between items-center px-5 py-4 border-b border-brand-elevated">
         <span class="font-semibold text-sm uppercase text-slate-400" id="modal-title">Body</span>
         <div class="flex gap-3 items-center">
-          <button class="bg-slate-700 border-0 text-slate-200 px-3 py-1.5 rounded text-xs cursor-pointer hover:bg-slate-600" id="modal-copy" onclick="copyContent()">Copy</button>
-          <button class="bg-transparent border-0 text-slate-400 text-2xl cursor-pointer p-0 leading-none hover:text-slate-200" onclick="closeModal()">&times;</button>
+          <button class="bg-brand-elevated border-0 text-slate-200 px-3 py-1.5 rounded text-xs cursor-pointer hover:bg-brand-gold hover:text-slate-950 transition-colors" id="modal-copy" onclick="copyContent()">Copy</button>
+          <button class="bg-transparent border-0 text-slate-400 text-2xl cursor-pointer p-0 leading-none hover:text-brand-gold transition-colors" onclick="closeModal()">&times;</button>
         </div>
       </div>
       <div class="p-5 overflow-auto flex-1">
@@ -115,38 +118,38 @@ export function renderLogs(logs, options = {}) {
 
   <div class="flex justify-between items-center mb-5">
     <div class="flex items-center gap-4">
-      <a href="/admin" class="text-slate-400 hover:text-slate-200 text-sm no-underline">← Home</a>
+      <a href="/admin" class="text-slate-400 hover:text-brand-gold text-sm no-underline transition-colors">← Home</a>
       <h1 class="m-0 text-2xl flex items-center gap-2.5">Logs Viewer <span class="text-slate-500 text-sm">${logs.length} entries</span></h1>
     </div>
     <form method="POST" action="/admin/logout" class="m-0">
-      <button type="submit" class="text-slate-400 no-underline text-sm bg-transparent border-0 cursor-pointer hover:text-slate-200">Logout</button>
+      <button type="submit" class="text-slate-400 no-underline text-sm bg-transparent border-0 cursor-pointer hover:text-brand-gold transition-colors">Logout</button>
     </form>
   </div>
 
   <form class="flex gap-2.5 mb-5 flex-wrap" method="GET">
-    <select name="level" class="px-3 py-2 border border-slate-700 rounded-md bg-slate-800 text-slate-200 text-sm">
+    <select name="level" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm">
       <option value="">All Levels</option>
       ${levels.map(l => `<option value="${l}" ${currentLevel === l ? 'selected' : ''}>${l.toUpperCase()}</option>`).join('')}
     </select>
 
     ${sources.length > 0 ? `
-    <select name="source" class="px-3 py-2 border border-slate-700 rounded-md bg-slate-800 text-slate-200 text-sm">
+    <select name="source" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm">
       <option value="">All Sources</option>
       ${sources.map(s => `<option value="${s}" ${currentSource === s ? 'selected' : ''}>${s}</option>`).join('')}
     </select>
     ` : ''}
 
-    <select name="route" class="px-3 py-2 border border-slate-700 rounded-md bg-slate-800 text-slate-200 text-sm">
+    <select name="route" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm">
       <option value="">All Routes</option>
       ${routes.map(r => `<option value="${r}" ${currentRoute === r ? 'selected' : ''}>${r}</option>`).join('')}
     </select>
 
-    <input type="text" name="search" placeholder="Search logs..." value="${currentSearch || ''}" class="px-3 py-2 border border-slate-700 rounded-md bg-slate-800 text-slate-200 text-sm">
-    <input type="number" name="limit" placeholder="Limit" value="${currentLimit}" class="px-3 py-2 border border-slate-700 rounded-md bg-slate-800 text-slate-200 text-sm w-20">
-    <button type="submit" class="px-3 py-2 bg-blue-500 border-blue-500 border rounded-md text-slate-200 text-sm cursor-pointer hover:bg-blue-600">Filter</button>
+    <input type="text" name="search" placeholder="Search logs..." value="${currentSearch || ''}" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm">
+    <input type="number" name="limit" placeholder="Limit" value="${currentLimit}" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm w-20">
+    <button type="submit" class="px-3 py-2 bg-brand-gold border-brand-gold border rounded-md text-slate-950 text-sm font-semibold cursor-pointer hover:bg-brand-gold-hover transition-colors">Filter</button>
   </form>
 
-  ${message ? `<div class="bg-slate-800 p-5 rounded-lg border border-slate-700"><p>${message}</p><p>App name: ${options.appName}</p><p>Log dir: ${options.logDir}</p></div>` : `
+  ${message ? `<div class="bg-brand-surface p-5 rounded-lg border border-brand-elevated"><p>${message}</p><p>App name: ${options.appName}</p><p>Log dir: ${options.logDir}</p></div>` : `
   <div class="flex flex-col gap-2">
     ${logs.map(log => renderLogEntry(log)).join('')}
   </div>
@@ -163,7 +166,7 @@ function renderLogEntry(log) {
 
   if (isRequest) {
     return `
-    <div class="bg-slate-800 rounded-lg p-3 px-4 border-l-[3px] ${colors.border}">
+    <div class="bg-brand-surface rounded-lg p-3 px-4 border-l-[3px] ${colors.border}">
       <div class="flex items-center gap-3 mb-2 flex-wrap">
         <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold uppercase ${colors.bg} ${colors.text}">${level}</span>
         <span class="font-mono font-semibold px-1.5 py-0.5 rounded ${statusClass}">${log.status}</span>
@@ -200,7 +203,7 @@ function renderLogEntry(log) {
     </div>`;
   } else {
     return `
-    <div class="bg-slate-800 rounded-lg p-3 px-4 border-l-[3px] ${colors.border}">
+    <div class="bg-brand-surface rounded-lg p-3 px-4 border-l-[3px] ${colors.border}">
       <div class="flex items-center gap-3 mb-2 flex-wrap">
         <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold uppercase ${colors.bg} ${colors.text}">${level}</span>
         <span class="text-slate-500 text-xs font-mono">${log.time ? new Date(log.time).toLocaleString() : ''}</span>
@@ -215,7 +218,7 @@ function renderTransposition(transposition) {
   <div class="mt-2.5">
     <div class="text-[11px] text-slate-500 mb-1 uppercase flex justify-between items-center">
       Transposition
-      <button class="bg-slate-700 border-0 text-slate-200 px-2.5 py-1 rounded text-[11px] cursor-pointer hover:bg-slate-600" data-transposition='${escapeHtml(JSON.stringify(transposition))}' onclick="copyTransposition(this)">Copy JSON</button>
+      <button class="bg-brand-elevated border-0 text-slate-200 px-2.5 py-1 rounded text-[11px] cursor-pointer hover:bg-brand-gold hover:text-slate-950 transition-colors" data-transposition='${escapeHtml(JSON.stringify(transposition))}' onclick="copyTransposition(this)">Copy JSON</button>
     </div>
     <div class="flex flex-col gap-2 p-2.5 bg-slate-950 rounded-md text-sm">
       <div class="flex flex-wrap gap-4">
