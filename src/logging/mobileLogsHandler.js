@@ -1,38 +1,29 @@
-import { mkdir, appendFile } from 'fs/promises';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { mobileLogger } from './loggers.js';
 import { sendTelegramAlert, formatMobileError } from './telegramNotifier.js';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-// Log file path
-export const MOBILE_LOG_FILE = join(__dirname, '../../logs/mobile.log');
 
 // Valid log levels
 const VALID_LEVELS = ['error', 'warn', 'info', 'debug'];
 
-// Write mobile log entry to file
-export async function writeMobileLog(logData) {
+// Write mobile log entry via Pino
+export function writeMobileLog(logData) {
+  const logEntry = {
+    msg: logData.message,
+    ...(logData.stackTrace && { stack: logData.stackTrace }),
+    app: logData.appVersion,
+    os: logData.osVersion,
+    device: logData.deviceModel,
+    screen: logData.screen,
+    ...(logData.context && { context: logData.context }),
+  };
+
+  // Clamp level to valid levels with fallback (defense in depth)
+  const safeLevel = VALID_LEVELS.includes(logData.level) ? logData.level : 'info';
+
   try {
-    const logDir = dirname(MOBILE_LOG_FILE);
-    await mkdir(logDir, { recursive: true });
-
-    const entry = {
-      level: logData.level,
-      time: new Date().toISOString(),
-      msg: logData.message,
-      ...(logData.stackTrace && { stack: logData.stackTrace }),
-      app: logData.appVersion,
-      os: logData.osVersion,
-      device: logData.deviceModel,
-      screen: logData.screen,
-      ...(logData.context && { context: logData.context }),
-    };
-
-    await appendFile(MOBILE_LOG_FILE, JSON.stringify(entry) + '\n');
+    mobileLogger[safeLevel](logEntry);
 
     // Send Telegram notification for mobile errors
-    if (logData.level === 'error') {
+    if (safeLevel === 'error') {
       sendTelegramAlert(
         formatMobileError({
           screen: logData.screen,
