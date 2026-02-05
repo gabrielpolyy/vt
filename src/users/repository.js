@@ -212,3 +212,41 @@ export async function updateUserPassword(userId, passwordHash) {
   );
   return rows[0] || null;
 }
+
+export async function getAppleOAuthAccount(userId) {
+  const { rows } = await db.query(
+    `SELECT * FROM oauth_accounts
+     WHERE user_id = $1 AND provider = 'apple'`,
+    [userId]
+  );
+  return rows[0] || null;
+}
+
+export async function deleteUserAccount(userId) {
+  // CASCADE will handle: oauth_accounts, refresh_tokens, password_reset_tokens,
+  // voice_profiles, voice_exploration_sessions, exercises (user-created),
+  // exercise_progress, exercise_attempts, favorites, user_activity
+  // Note: user_subscriptions uses ON DELETE SET NULL (preserves records as orphaned)
+  const client = await db.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Mark subscriptions as orphaned BEFORE deleting user
+    // (ON DELETE SET NULL will set user_id = NULL, but won't set is_orphaned)
+    await client.query(
+      `UPDATE user_subscriptions SET is_orphaned = TRUE, updated_at = NOW() WHERE user_id = $1`,
+      [userId]
+    );
+
+    // Delete user (CASCADE handles other tables)
+    const { rowCount } = await client.query('DELETE FROM users WHERE id = $1', [userId]);
+
+    await client.query('COMMIT');
+    return rowCount > 0;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
