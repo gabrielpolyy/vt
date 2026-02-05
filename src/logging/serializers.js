@@ -5,15 +5,10 @@ const SENSITIVE_FIELDS = [
   'resetToken', 'code', 'authorization'
 ];
 
-// Query params that should be redacted
-const SENSITIVE_QUERY_PARAMS = ['token', 'code', 'secret', 'key'];
-
 // Maximum body size to log
 const MAX_BODY_SIZE = 2000;
 
-// Routes to skip logging
-const SKIP_ROUTES = ['/admin/logs', '/logs', '/health'];
-
+// Sanitize body for mobile error logs
 export function sanitizeBody(body) {
   if (body === undefined || body === null) return undefined;
   if (typeof body !== 'object') {
@@ -21,7 +16,6 @@ export function sanitizeBody(body) {
     return str.length > MAX_BODY_SIZE ? str.slice(0, MAX_BODY_SIZE) + '...[truncated]' : str;
   }
 
-  // Preserve arrays
   if (Array.isArray(body)) {
     return body.map(item => sanitizeBody(item));
   }
@@ -36,24 +30,6 @@ export function sanitizeBody(body) {
       sanitized[key] = value.slice(0, MAX_BODY_SIZE) + '...[truncated]';
     } else {
       sanitized[key] = value;
-    }
-  }
-  return sanitized;
-}
-
-// Check if route should be logged
-export function shouldLogRoute(url) {
-  const path = url.split('?')[0];
-  return !SKIP_ROUTES.some(skip => path.startsWith(skip));
-}
-
-// Sanitize query params by redacting sensitive values
-export function sanitizeQuery(query) {
-  if (!query || typeof query !== 'object') return query;
-  const sanitized = { ...query };
-  for (const key of Object.keys(sanitized)) {
-    if (SENSITIVE_QUERY_PARAMS.some(p => key.toLowerCase().includes(p))) {
-      sanitized[key] = '[REDACTED]';
     }
   }
   return sanitized;

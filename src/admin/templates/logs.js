@@ -92,17 +92,6 @@ export function renderLogs(logs, options = {}) {
         }, 2000);
       });
     }
-    function copyTransposition(btn) {
-      const data = JSON.parse(btn.dataset.transposition);
-      navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
-        btn.textContent = 'Copied!';
-        btn.classList.add('bg-green-500');
-        setTimeout(() => {
-          btn.textContent = 'Copy JSON';
-          btn.classList.remove('bg-green-500');
-        }, 2000);
-      });
-    }
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeModal();
     });
@@ -160,11 +149,13 @@ export function renderLogs(logs, options = {}) {
 
 function renderLogEntry(log) {
   const isRequest = log.method && log.url;
+  const isEvent = log.event;
   const level = log.level || 'info';
   const colors = LEVEL_COLORS[level] || LEVEL_COLORS.info;
   const statusClass = log.status >= 500 ? 'bg-red-500/20 text-red-500' : log.status >= 400 ? 'bg-amber-500/20 text-amber-500' : 'bg-green-500/20 text-green-500';
 
   if (isRequest) {
+    // Server error logs (5xx)
     return `
     <div class="bg-brand-surface rounded-lg p-3 px-4 border-l-[3px] ${colors.border}">
       <div class="flex items-center gap-3 mb-2 flex-wrap">
@@ -175,33 +166,26 @@ function renderLogEntry(log) {
         <span class="text-slate-500 text-xs">${log.ms}ms</span>
         <span class="text-slate-500 text-xs font-mono">${log.time ? new Date(log.time).toLocaleString() : ''}</span>
       </div>
-      <div class="flex gap-4 text-xs text-slate-400 mt-2 flex-wrap">
-        <div class="flex gap-1"><span class="text-slate-500">IP:</span> ${escapeHtml(log.ip || '-')}</div>
-        <div class="flex gap-1"><span class="text-slate-500">UA:</span> ${escapeHtml((log.ua || '-').slice(0, 80))}</div>
-      </div>
-      ${log.query && Object.keys(log.query).length ? `
-      <div class="mt-2.5">
-        <div class="text-[11px] text-slate-500 mb-1 uppercase">Query</div>
-        <div class="body-expandable">${escapeHtml(JSON.stringify(log.query, null, 2))}</div>
-      </div>` : ''}
-      ${log.reqBody ? `
-      <div class="mt-2.5">
-        <div class="text-[11px] text-slate-500 mb-1 uppercase">Request Body</div>
-        <div class="body-expandable">${escapeHtml(JSON.stringify(log.reqBody, null, 2))}</div>
-      </div>` : ''}
-      ${log.resBody ? `
-      <div class="mt-2.5">
-        <div class="text-[11px] text-slate-500 mb-1 uppercase">Response Body</div>
-        <div class="body-expandable">${escapeHtml(JSON.stringify(log.resBody, null, 2))}</div>
-      </div>` : ''}
-      ${log.transposition ? renderTransposition(log.transposition) : ''}
+      ${log.userId ? `<div class="text-xs text-slate-400 mt-1">User: ${escapeHtml(log.userId)}</div>` : ''}
       ${log.err ? `
       <div class="mt-2.5">
         <div class="text-[11px] text-slate-500 mb-1 uppercase">Error</div>
         <div class="body-expandable text-red-500">${escapeHtml(log.err.message || JSON.stringify(log.err, null, 2))}</div>
       </div>` : ''}
     </div>`;
+  } else if (isEvent) {
+    // Business event logs (auth, subscription, email)
+    return `
+    <div class="bg-brand-surface rounded-lg p-3 px-4 border-l-[3px] ${colors.border}">
+      <div class="flex items-center gap-3 mb-2 flex-wrap">
+        <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold uppercase ${colors.bg} ${colors.text}">${level}</span>
+        <span class="font-mono font-semibold px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400">${escapeHtml(log.event)}</span>
+        ${log.userId ? `<span class="text-slate-400 text-xs">User: ${escapeHtml(log.userId)}</span>` : ''}
+        <span class="text-slate-500 text-xs font-mono">${log.time ? new Date(log.time).toLocaleString() : ''}</span>
+      </div>
+    </div>`;
   } else {
+    // Generic logs
     return `
     <div class="bg-brand-surface rounded-lg p-3 px-4 border-l-[3px] ${colors.border}">
       <div class="flex items-center gap-3 mb-2 flex-wrap">
@@ -211,28 +195,4 @@ function renderLogEntry(log) {
       <div class="text-slate-200 py-1">${escapeHtml(log.msg)}</div>
     </div>`;
   }
-}
-
-function renderTransposition(transposition) {
-  return `
-  <div class="mt-2.5">
-    <div class="text-[11px] text-slate-500 mb-1 uppercase flex justify-between items-center">
-      Transposition
-      <button class="bg-brand-elevated border-0 text-slate-200 px-2.5 py-1 rounded text-[11px] cursor-pointer hover:bg-brand-gold hover:text-slate-950 transition-colors" data-transposition='${escapeHtml(JSON.stringify(transposition))}' onclick="copyTransposition(this)">Copy JSON</button>
-    </div>
-    <div class="flex flex-col gap-2 p-2.5 bg-slate-950 rounded-md text-sm">
-      <div class="flex flex-wrap gap-4">
-        <span class="text-violet-400 font-medium">Voice: ${escapeHtml(transposition.voiceProfile?.low || '?')} (${transposition.voiceProfile?.lowMidi ?? '?'}) - ${escapeHtml(transposition.voiceProfile?.high || '?')} (${transposition.voiceProfile?.highMidi ?? '?'})</span>
-        <span class="text-green-500 font-medium">Shift: ${transposition.shift > 0 ? '+' : ''}${transposition.shift} semitones</span>
-      </div>
-      <div class="flex flex-wrap gap-4">
-        <span class="text-slate-400 font-mono">${(transposition.noteChanges || []).map(c => `${escapeHtml(c.from)} (${c.fromMidi}) → ${escapeHtml(c.to)} (${c.toMidi})`).join(', ')}</span>
-      </div>
-      ${transposition.stretchNotes?.length ? `
-      <div class="flex flex-wrap gap-4 mt-1 pt-2 border-t border-slate-700">
-        <span class="text-amber-500 font-medium">Stretch notes (80¢ tolerance):</span>
-        <span class="text-amber-400 font-mono">${transposition.stretchNotes.map(s => `${escapeHtml(s.note)} (${s.midi})`).join(', ')}</span>
-      </div>` : ''}
-    </div>
-  </div>`;
 }

@@ -8,8 +8,7 @@ import {
   toggleFavorite as toggleFavoriteRepo,
 } from './repository.js';
 import { getVoiceProfile } from '../voice-profile/repository.js';
-import { transposeForVoiceProfile, getTranspositionDetails, midiToPitch } from './transposition.js';
-import { logTransposition } from '../logging/index.js';
+import { transposeForVoiceProfile } from './transposition.js';
 import { getHighwayAudioUrls } from '../utils/r2.js';
 
 // Access level helpers
@@ -71,34 +70,6 @@ export async function getExercise(request, reply) {
 
   // Get user's voice profile and transpose exercise
   const voiceProfile = await getVoiceProfile(userId);
-
-  // Attach transposition details for logging
-  if (voiceProfile) {
-    const { shift, noteChanges, stretchNotes } = getTranspositionDetails(exercise.definition, voiceProfile);
-    request.transpositionLog = {
-      timestamp: new Date().toISOString(),
-      exercise: {
-        id: exercise.id,
-        slug: exercise.slug,
-        name: exercise.name,
-        description: exercise.description,
-        type: exercise.type,
-        category: exercise.category,
-      },
-      voiceProfile: {
-        low: midiToPitch(voiceProfile.lowest_midi),
-        lowMidi: voiceProfile.lowest_midi,
-        high: midiToPitch(voiceProfile.highest_midi),
-        highMidi: voiceProfile.highest_midi,
-      },
-      shift,
-      noteChanges,
-      stretchNotes,
-    };
-
-    // Log to dedicated transpositions.log file
-    logTransposition(request.transpositionLog);
-  }
 
   // Skip transposition for audio exercises - lyrics shouldn't be modified
   const definition = exercise.category === 'audio'

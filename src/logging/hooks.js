@@ -1,76 +1,49 @@
-import { sanitizeBody, sanitizeQuery, shouldLogRoute } from './serializers.js';
 import { sendTelegramAlert, formatServerError } from './telegramNotifier.js';
 
-// Register request/response logging hooks
+// Strip querystring from URL to prevent token leaks in logs
+function stripQuerystring(url) {
+  return url?.split('?')[0] || url;
+}
+
+// Register error-only logging hooks (Nginx handles HTTP-level logging)
 export function registerLoggingHooks(fastify) {
-  // Store response body for logging (JSON only - skip HTML to prevent token leaks)
-  fastify.addHook('onSend', async (request, reply, payload) => {
-    if (payload && typeof payload === 'string') {
-      try {
-        request._responseBody = JSON.parse(payload);
-      } catch {
-        // Non-JSON response - don't store (could contain HTML with tokens)
-        request._responseBody = null;
-      }
-    }
-    return payload;
+  // Capture errors with full stack trace (onResponse doesn't have access to err)
+  fastify.addHook('onError', async (request, reply, error) => {
+    // Store error for onResponse to use
+    request._serverError = error;
   });
 
-  // Log after response is sent
   fastify.addHook('onResponse', async (request, reply) => {
-    // Skip logging for certain routes
-    if (!shouldLogRoute(request.url)) return;
+    // Only log server errors (5xx)
+    if (reply.statusCode < 500) return;
 
-    const responseTime = reply.elapsedTime?.toFixed(1) || 0;
-
+    const safePath = stripQuerystring(request.url);
     const logData = {
-      timestamp: new Date().toISOString(),
       userId: request.user?.id || 'anonymous',
       method: request.method,
-      url: request.url.split('?')[0],  // Path only, no querystring
+      url: safePath,
       status: reply.statusCode,
-      ms: parseFloat(responseTime),
-      ip: request.ip,
-      ua: request.headers['user-agent'] || '-',
+      ms: parseFloat(reply.elapsedTime?.toFixed(1) || 0),
     };
 
-    // Add query params if present (sanitized)
-    if (request.query && Object.keys(request.query).length > 0) {
-      logData.query = sanitizeQuery(request.query);
+    // Include error details if captured
+    if (request._serverError) {
+      logData.err = {
+        type: request._serverError.constructor?.name,
+        message: request._serverError.message,
+        stack: request._serverError.stack,
+      };
     }
 
-    // Add request body if present (sanitized)
-    if (request.body && Object.keys(request.body).length > 0) {
-      logData.reqBody = sanitizeBody(request.body);
-    }
+    request.log.error(logData, `${request.method} ${safePath} ${reply.statusCode}`);
 
-    // Add response body if present (sanitized)
-    if (request._responseBody) {
-      logData.resBody = sanitizeBody(request._responseBody);
-    }
-
-    // Add transposition details if present (for exercise requests)
-    if (request.transpositionLog) {
-      logData.transposition = request.transpositionLog;
-    }
-
-    // Choose log level based on status code
-    const level = reply.statusCode >= 500 ? 'error' : reply.statusCode >= 400 ? 'warn' : 'info';
-
-    request.log[level](logData, `${request.method} ${request.url} ${reply.statusCode}`);
-
-    // Send Telegram notification for server errors (5xx)
-    if (reply.statusCode >= 500) {
-      const errorMsg = request._responseBody?.error || request._responseBody?.message || 'Internal server error';
-      sendTelegramAlert(
-        formatServerError({
-          method: request.method,
-          url: request.url,
-          status: reply.statusCode,
-          ip: request.ip,
-          error: errorMsg,
-        })
-      );
-    }
+    sendTelegramAlert(
+      formatServerError({
+        method: request.method,
+        url: safePath,
+        status: reply.statusCode,
+        error: request._serverError?.message || 'Server error',
+      })
+    );
   });
 }

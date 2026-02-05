@@ -41,17 +41,12 @@ function parseLogLine(line) {
       time: parsed.time ? new Date(parsed.time).toISOString() : null,
       level: LEVEL_NAMES[parsed.level] || 'info',
       msg,
+      event: parsed.event,
       userId: parsed.userId,
       method: parsed.method,
       url: parsed.url,
       status: parsed.status,
       ms: parsed.ms,
-      ip: parsed.ip,
-      ua: parsed.ua,
-      query: parsed.query,
-      reqBody: parsed.reqBody,
-      resBody: parsed.resBody,
-      transposition: parsed.transposition,
       err: parsed.err,
     };
   } catch {
@@ -106,12 +101,14 @@ function findLogFiles() {
   return files;
 }
 
-// Route filters - map friendly name to URL patterns
+// Route filters - map friendly name to URL patterns and event prefixes
 const ROUTE_FILTERS = {
-  auth: ['/auth'],
-  exercises: ['/api/exercises'],
-  'voice-profile': ['/api/voice-profile'],
-  health: ['/api/health', '/api/db-check'],
+  auth: { urls: ['/auth'], events: ['auth.'] },
+  exercises: { urls: ['/api/exercises'], events: [] },
+  'voice-profile': { urls: ['/api/voice-profile'], events: [] },
+  subscriptions: { urls: ['/api/subscriptions', '/api/webhooks'], events: ['subscription.'] },
+  health: { urls: ['/api/health', '/api/db-check'], events: [] },
+  email: { urls: [], events: ['email.'] },
 };
 
 export async function getLogs(request, reply) {
@@ -153,12 +150,19 @@ export async function getLogs(request, reply) {
     allLogs = allLogs.filter(log => log.level === level);
   }
 
-  // Filter by route (only show request logs matching the pattern)
+  // Filter by route (match URL patterns or event prefixes)
   if (route && ROUTE_FILTERS[route]) {
-    const patterns = ROUTE_FILTERS[route];
+    const { urls, events } = ROUTE_FILTERS[route];
     allLogs = allLogs.filter(log => {
-      if (!log.url) return false; // Exclude non-request logs
-      return patterns.some(pattern => log.url.startsWith(pattern));
+      // Match URL patterns
+      if (log.url && urls.some(pattern => log.url.startsWith(pattern))) {
+        return true;
+      }
+      // Match event prefixes
+      if (log.event && events.some(prefix => log.event.startsWith(prefix))) {
+        return true;
+      }
+      return false;
     });
   }
 
@@ -167,10 +171,9 @@ export async function getLogs(request, reply) {
     const searchLower = search.toLowerCase();
     allLogs = allLogs.filter(log =>
       log.msg?.toLowerCase().includes(searchLower) ||
+      log.event?.toLowerCase().includes(searchLower) ||
       log.url?.toLowerCase().includes(searchLower) ||
-      log.ip?.toLowerCase().includes(searchLower) ||
-      JSON.stringify(log.reqBody || {}).toLowerCase().includes(searchLower) ||
-      JSON.stringify(log.resBody || {}).toLowerCase().includes(searchLower)
+      log.userId?.toString().toLowerCase().includes(searchLower)
     );
   }
 

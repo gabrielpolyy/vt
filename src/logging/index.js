@@ -1,11 +1,8 @@
 import { requestSerializer, responseSerializer, errorSerializer } from './serializers.js';
 import {
   DEV_LOG_FILE,
-  TRANSPOSITION_LOG_FILE,
   MOBILE_LOG_FILE,
-  transpositionLogger,
   mobileLogger,
-  logTransposition,
 } from './loggers.js';
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -13,11 +10,8 @@ const isProduction = process.env.NODE_ENV === 'production';
 // Re-export from loggers.js
 export {
   DEV_LOG_FILE,
-  TRANSPOSITION_LOG_FILE,
   MOBILE_LOG_FILE,
-  transpositionLogger,
   mobileLogger,
-  logTransposition,
 };
 
 // Build logger options for Fastify (main app logger)

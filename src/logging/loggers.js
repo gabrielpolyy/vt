@@ -7,7 +7,6 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 // Log file paths (dev only)
 export const DEV_LOG_FILE = join(__dirname, '../../logs/app.log');
-export const TRANSPOSITION_LOG_FILE = join(__dirname, '../../logs/transpositions.log');
 export const MOBILE_LOG_FILE = join(__dirname, '../../logs/mobile.log');
 
 // Create a Pino logger with optional file destination (dev only)
@@ -42,10 +41,4 @@ function createLogger(type, devFilePath) {
 }
 
 // Specialized loggers
-export const transpositionLogger = createLogger('transposition', TRANSPOSITION_LOG_FILE);
 export const mobileLogger = createLogger('mobile', MOBILE_LOG_FILE);
-
-// Helper function for transposition logging
-export function logTransposition(data) {
-  transpositionLogger.info(data);
-}

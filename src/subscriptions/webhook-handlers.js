@@ -81,12 +81,10 @@ export async function handleAppleWebhook(request, reply) {
   // Check for duplicate webhook
   const existingLog = await findWebhookLog(notificationUUID);
   if (existingLog) {
-    request.log.info({ notificationUUID }, 'Duplicate webhook, skipping');
     return { success: true, duplicate: true };
   }
 
   if (!transactionInfo) {
-    request.log.warn({ notificationType }, 'Webhook missing transaction info');
     // Log it anyway to prevent reprocessing
     await createWebhookLog({
       notificationUuid: notificationUUID,
@@ -170,7 +168,7 @@ export async function handleAppleWebhook(request, reply) {
         tier: 'premium',
         subscriptionValidUntil: expiresAt,
       });
-      request.log.info({ userId, notificationType }, 'Granted premium via webhook');
+      request.log.info({ userId, event: 'subscription.granted' });
     } else if (REVOKE_TYPES.includes(notificationType)) {
       // Revoke premium
       await updateUserTier({
@@ -178,7 +176,7 @@ export async function handleAppleWebhook(request, reply) {
         tier: 'free',
         subscriptionValidUntil: null,
       });
-      request.log.info({ userId, notificationType }, 'Revoked premium via webhook');
+      request.log.info({ userId, event: 'subscription.revoked' });
     } else if (notificationType === 'DID_RENEW' || notificationType === 'RENEWAL_EXTENDED') {
       // Update subscription expiration without bumping entV
       // Only update subscription_valid_until, not tier change
@@ -187,7 +185,7 @@ export async function handleAppleWebhook(request, reply) {
         `UPDATE users SET subscription_valid_until = $2, updated_at = NOW() WHERE id = $1`,
         [userId, expiresAt]
       );
-      request.log.info({ userId, notificationType, expiresAt }, 'Updated subscription expiration');
+      request.log.info({ userId, event: 'subscription.renewed' });
     }
     // For DID_FAIL_TO_RENEW and DID_CHANGE_RENEWAL_STATUS, we don't change user tier
   }
@@ -200,11 +198,6 @@ export async function handleAppleWebhook(request, reply) {
     originalTransactionId,
     signedDate: appleTimestampToDate(signedDate),
   });
-
-  request.log.info(
-    { notificationType, subtype, originalTransactionId, status },
-    'Processed Apple webhook'
-  );
 
   // Always return 200 to Apple
   return { success: true };

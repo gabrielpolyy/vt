@@ -32,20 +32,15 @@ export async function saveProfile(request, reply) {
   const userId = request.user.id;
   const { lowestMidi, highestMidi } = request.body;
 
-  request.log.debug({ lowestMidi, highestMidi }, 'Saving voice profile');
-
   if (lowestMidi == null && highestMidi == null) {
-    request.log.warn('Missing lowestMidi and highestMidi in request body');
     return reply.code(400).send({ error: 'lowestMidi or highestMidi is required' });
   }
 
   // Save the session history
   await saveVoiceExplorationSession(userId, lowestMidi, highestMidi);
-  request.log.debug('Saved exploration session');
 
   // Update the aggregate profile (expanding ranges)
   const updatedProfile = await upsertVoiceProfile(userId, lowestMidi, highestMidi);
-  request.log.debug('Updated voice profile');
 
   return reply.code(201).send({
     profile: {
@@ -82,12 +77,8 @@ export async function saveWarmupSession(request, reply) {
     return reply.code(400).send({ error: 'samples array is required' });
   }
 
-  request.log.debug({ sampleCount: samples.length }, 'Analyzing warmup session');
-
   // Run the percentile-based range analysis
   const { lowestMidi, highestMidi, confidence, valid, reason, stats } = analyzeRange(samples);
-
-  request.log.info({ lowestMidi, highestMidi, confidence, valid, reason, stats }, 'Range analysis complete');
 
   // Save the session with raw samples for future ML training
   await saveSessionWithSamples(
@@ -103,16 +94,12 @@ export async function saveWarmupSession(request, reply) {
   // Update the aggregate profile if we got valid results
   let updatedProfile = null;
   if (lowestMidi !== null || highestMidi !== null) {
-    request.log.info({ lowestMidi, highestMidi, confidence }, 'Updating voice profile');
     updatedProfile = await upsertVoiceProfileWithConfidence(
       userId,
       lowestMidi,
       highestMidi,
       confidence
     );
-    request.log.info({ updatedProfile }, 'Voice profile updated');
-  } else {
-    request.log.warn('Skipping profile update - both lowestMidi and highestMidi are null');
   }
 
   return reply.code(201).send({

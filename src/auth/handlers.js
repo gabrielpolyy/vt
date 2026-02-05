@@ -75,11 +75,13 @@ export async function login(request, reply) {
 
   const user = await findUserByEmail(email);
   if (!user || !user.password_hash) {
+    request.log.info({ event: 'auth.login_failed' });
     return reply.code(401).send({ error: 'Invalid credentials' });
   }
 
   const isValid = await verifyPassword(user.password_hash, password);
   if (!isValid) {
+    request.log.info({ event: 'auth.login_failed' });
     return reply.code(401).send({ error: 'Invalid credentials' });
   }
 
@@ -90,6 +92,8 @@ export async function login(request, reply) {
     deviceInfo: getDeviceInfo(request),
     ipAddress: request.ip,
   });
+
+  request.log.info({ userId: user.id, event: 'auth.login' });
 
   return {
     user: {
@@ -190,6 +194,7 @@ export async function refresh(request, reply) {
 
   const tokenRecord = await findRefreshToken(refreshToken);
   if (!tokenRecord) {
+    request.log.info({ event: 'auth.refresh_failed' });
     return reply.code(401).send({ error: 'Invalid or expired refresh token' });
   }
 
@@ -214,6 +219,8 @@ export async function refresh(request, reply) {
     ipAddress: request.ip,
   });
 
+  request.log.info({ userId: user.id, event: 'auth.refresh' });
+
   return {
     ...tokens,
     tier: user.tier,
@@ -223,11 +230,16 @@ export async function refresh(request, reply) {
 
 export async function logout(request) {
   const { refreshToken, allDevices } = request.body;
+  const userId = request.user?.id;
 
-  if (allDevices) {
-    await revokeAllUserTokens(request.user.id);
+  if (allDevices && userId) {
+    await revokeAllUserTokens(userId);
   } else if (refreshToken) {
     await revokeRefreshToken(refreshToken);
+  }
+
+  if (userId) {
+    request.log.info({ userId, event: 'auth.logout' });
   }
 
   return { success: true };
@@ -449,6 +461,8 @@ export async function requestPasswordReset(request, reply) {
       html: emailContent.html,
       text: emailContent.text,
     });
+
+    request.log.info({ userId: user.id, event: 'email.password_reset_sent' });
   } catch (err) {
     request.log.error({ err }, 'Failed to send password reset email');
     // Still return success to prevent enumeration
