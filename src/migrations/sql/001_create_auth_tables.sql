@@ -8,6 +8,7 @@ CREATE TABLE users (
     level INTEGER NOT NULL DEFAULT 1,
     node INTEGER NOT NULL DEFAULT 1,
     is_guest BOOLEAN NOT NULL DEFAULT FALSE,
+    is_admin BOOLEAN DEFAULT FALSE,
     -- Subscription fields
     app_account_token UUID NOT NULL DEFAULT gen_random_uuid() UNIQUE,
     tier VARCHAR(10) NOT NULL DEFAULT 'free' CHECK (tier IN ('free', 'premium')),
@@ -114,3 +115,19 @@ CREATE TABLE apple_webhook_log (
 CREATE INDEX idx_apple_webhook_log_notification_uuid ON apple_webhook_log(notification_uuid);
 CREATE INDEX idx_apple_webhook_log_original_transaction_id ON apple_webhook_log(original_transaction_id);
 CREATE INDEX idx_apple_webhook_log_processed_at ON apple_webhook_log(processed_at);
+
+-- Password reset tokens table
+CREATE TABLE password_reset_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash VARCHAR(255) NOT NULL UNIQUE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    used_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for efficient lookup of valid tokens
+CREATE INDEX idx_password_reset_tokens_hash ON password_reset_tokens(token_hash) WHERE used_at IS NULL;
+
+-- Ensure only one active (unused) reset token per user to prevent race conditions
+CREATE UNIQUE INDEX idx_password_reset_tokens_user_active ON password_reset_tokens(user_id) WHERE used_at IS NULL;

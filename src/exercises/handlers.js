@@ -71,8 +71,8 @@ export async function getExercise(request, reply) {
   // Get user's voice profile and transpose exercise
   const voiceProfile = await getVoiceProfile(userId);
 
-  // Skip transposition for audio exercises - lyrics shouldn't be modified
-  const definition = exercise.category === 'audio'
+  // Skip transposition for audio and learn exercises - content shouldn't be modified
+  const definition = (exercise.category === 'audio' || exercise.type === 'learn')
     ? exercise.definition
     : transposeForVoiceProfile(exercise.definition, voiceProfile);
 

@@ -3,8 +3,8 @@ CREATE TABLE exercises (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     slug VARCHAR(50) UNIQUE,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    type VARCHAR(20) NOT NULL CHECK (type IN ('pitch', 'highway', 'warmup')),
-    category VARCHAR(30) CHECK (category IN ('pitch_matching', 'scale_runs', 'interval_training', 'highway', 'audio')),
+    type VARCHAR(20) NOT NULL CHECK (type IN ('pitch', 'highway', 'learn')),
+    category VARCHAR(30) CHECK (category IN ('pitch_matching', 'scale_runs', 'interval_training', 'highway', 'audio', 'learn')),
     name VARCHAR(100) NOT NULL,
     description TEXT,
     definition JSONB NOT NULL,
@@ -61,3 +61,15 @@ CREATE TABLE exercise_attempts (
 
 CREATE INDEX idx_exercise_attempts_user ON exercise_attempts(user_id, created_at DESC);
 CREATE INDEX idx_exercise_attempts_exercise ON exercise_attempts(exercise_id);
+
+-- Favorites
+CREATE TABLE favorites (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    exercise_id UUID NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, exercise_id)
+);
+
+CREATE INDEX idx_favorites_user ON favorites(user_id);
+CREATE INDEX idx_favorites_exercise ON favorites(exercise_id);
