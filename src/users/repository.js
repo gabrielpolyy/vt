@@ -201,3 +201,14 @@ export async function updateUserName(userId, name) {
   );
   return rows[0] || null;
 }
+
+export async function updateUserPassword(userId, passwordHash) {
+  const { rows } = await db.query(
+    `UPDATE users
+     SET password_hash = $2, updated_at = NOW()
+     WHERE id = $1
+     RETURNING id, email, name`,
+    [userId, passwordHash]
+  );
+  return rows[0] || null;
+}

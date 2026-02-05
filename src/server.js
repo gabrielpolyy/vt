@@ -8,6 +8,7 @@ import fastifyMultipart from '@fastify/multipart';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { db } from './db.js';
+import emailPlugin from './email/index.js';
 import authPlugin from './auth/index.js';
 import voiceProfilePlugin from './voice-profile/index.js';
 import exercisesPlugin from './exercises/index.js';
@@ -19,6 +20,7 @@ import legalPlugin from './legal/index.js';
 import subscriptionsPlugin from './subscriptions/index.js';
 import usersPlugin from './users/index.js';
 import { buildLoggerOptions, registerLoggingHooks, mobileLogsRoutes } from './logging/index.js';
+import { showResetPasswordForm, handleResetPasswordForm } from './auth/resetPasswordPage.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -52,6 +54,9 @@ fastify.register(fastifyFormbody);
 // Multipart support for file uploads
 fastify.register(fastifyMultipart);
 
+// Email plugin (SMTP)
+fastify.register(emailPlugin);
+
 // Auth plugin
 fastify.register(authPlugin);
 
@@ -84,6 +89,10 @@ fastify.register(usersPlugin);
 
 // Mobile logs plugin
 fastify.register(mobileLogsRoutes);
+
+// Password reset web pages (root level for user-facing URLs)
+fastify.get('/reset-password', showResetPasswordForm);
+fastify.post('/reset-password', handleResetPasswordForm);
 
 // Health check
 fastify.get('/api/health', async () => {

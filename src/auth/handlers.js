@@ -20,6 +20,12 @@ import {
   getDeviceInfo,
 } from './services.js';
 import { verifyAppleToken } from './apple.js';
+import {
+  createPasswordResetToken,
+  executePasswordReset,
+} from './passwordResetRepository.js';
+import { sendEmail, isEmailEnabled } from '../email/index.js';
+import { passwordResetEmail } from '../email/templates/passwordReset.js';
 
 export async function register(request, reply) {
   const { email, password, name } = request.body;
@@ -408,4 +414,68 @@ export async function claimWithApple(request, reply) {
     },
     ...tokens,
   };
+}
+
+export async function requestPasswordReset(request, reply) {
+  const { email } = request.body;
+
+  if (!email) {
+    return reply.code(400).send({ error: 'Email is required' });
+  }
+
+  // Always return success to prevent email enumeration
+  const successResponse = { message: 'If an account exists with this email, a reset link has been sent' };
+
+  if (!isEmailEnabled()) {
+    request.log.warn('Password reset requested but email service is disabled');
+    return successResponse;
+  }
+
+  const user = await findUserByEmail(email);
+  if (!user || !user.password_hash) {
+    // User doesn't exist or uses OAuth only - return success anyway
+    return successResponse;
+  }
+
+  try {
+    const token = await createPasswordResetToken(user.id);
+    const appUrl = process.env.APP_URL || 'https://pitchhighway.com';
+    const resetUrl = `${appUrl}/reset-password?token=${token}`;
+
+    const emailContent = passwordResetEmail({ resetUrl, expiresInMinutes: 60 });
+    await sendEmail({
+      to: user.email,
+      subject: emailContent.subject,
+      html: emailContent.html,
+      text: emailContent.text,
+    });
+  } catch (err) {
+    request.log.error({ err, email }, 'Failed to send password reset email');
+    // Still return success to prevent enumeration
+  }
+
+  return successResponse;
+}
+
+export async function resetPassword(request, reply) {
+  const { token, password } = request.body;
+
+  if (!token || !password) {
+    return reply.code(400).send({ error: 'Token and password are required' });
+  }
+
+  if (password.length < authConfig.password.minLength) {
+    return reply.code(400).send({
+      error: `Password must be at least ${authConfig.password.minLength} characters`,
+    });
+  }
+
+  const passwordHash = await hashPassword(password);
+  const result = await executePasswordReset(token, passwordHash);
+
+  if (!result) {
+    return reply.code(400).send({ error: 'Invalid or expired reset token' });
+  }
+
+  return { message: 'Password has been reset successfully' };
 }

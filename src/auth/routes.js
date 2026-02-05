@@ -1,4 +1,4 @@
-import { register, login, appleAuth, refresh, logout, me, checkEmail, guestLogin, claimWithPassword, claimWithApple } from './handlers.js';
+import { register, login, appleAuth, refresh, logout, me, checkEmail, guestLogin, claimWithPassword, claimWithApple, requestPasswordReset, resetPassword } from './handlers.js';
 import { authenticate } from './middleware.js';
 
 export default async function authRoutes(fastify) {
@@ -31,6 +31,16 @@ export default async function authRoutes(fastify) {
   fastify.get('/check-email', {
     config: { rateLimit: { max: 10, timeWindow: '1m' } },
     handler: checkEmail,
+  });
+
+  fastify.post('/forgot-password', {
+    config: { rateLimit: { max: 3, timeWindow: '15m' } },
+    handler: requestPasswordReset,
+  });
+
+  fastify.post('/reset-password', {
+    config: { rateLimit: { max: 5, timeWindow: '15m' } },
+    handler: resetPassword,
   });
 
   // Protected routes
