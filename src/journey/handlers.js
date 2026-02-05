@@ -81,7 +81,7 @@ export async function getJourney(request, reply) {
       bestScore: row.best_score ?? 0,
       maxScore,
       stars,
-      completed: stars >= 1,
+      completed: maxScore === 0 ? row.completed_count > 0 : stars >= 1,
       accessLevel: row.access_level,
       isLocked: !hasAccess(userLevel, row.access_level),
     };
