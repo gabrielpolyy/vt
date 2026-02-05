@@ -1,16 +1,16 @@
-import { sanitizeBody, shouldLogRoute } from './serializers.js';
+import { sanitizeBody, sanitizeQuery, shouldLogRoute } from './serializers.js';
 import { sendTelegramAlert, formatServerError } from './telegramNotifier.js';
 
 // Register request/response logging hooks
 export function registerLoggingHooks(fastify) {
-  // Store response body for logging
+  // Store response body for logging (JSON only - skip HTML to prevent token leaks)
   fastify.addHook('onSend', async (request, reply, payload) => {
-    // Store response body for logging (parse JSON if possible)
     if (payload && typeof payload === 'string') {
       try {
         request._responseBody = JSON.parse(payload);
       } catch {
-        request._responseBody = payload.length > 500 ? payload.slice(0, 500) + '...' : payload;
+        // Non-JSON response - don't store (could contain HTML with tokens)
+        request._responseBody = null;
       }
     }
     return payload;
@@ -25,17 +25,18 @@ export function registerLoggingHooks(fastify) {
 
     const logData = {
       timestamp: new Date().toISOString(),
+      userId: request.user?.id || 'anonymous',
       method: request.method,
-      url: request.url,
+      url: request.url.split('?')[0],  // Path only, no querystring
       status: reply.statusCode,
       ms: parseFloat(responseTime),
       ip: request.ip,
       ua: request.headers['user-agent'] || '-',
     };
 
-    // Add query params if present
+    // Add query params if present (sanitized)
     if (request.query && Object.keys(request.query).length > 0) {
-      logData.query = request.query;
+      logData.query = sanitizeQuery(request.query);
     }
 
     // Add request body if present (sanitized)

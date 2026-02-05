@@ -41,6 +41,7 @@ function parseLogLine(line) {
       time: parsed.time ? new Date(parsed.time).toISOString() : null,
       level: LEVEL_NAMES[parsed.level] || 'info',
       msg,
+      userId: parsed.userId,
       method: parsed.method,
       url: parsed.url,
       status: parsed.status,

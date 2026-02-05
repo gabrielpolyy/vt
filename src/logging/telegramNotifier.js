@@ -103,10 +103,10 @@ export function formatMobileError({ screen, device, osVersion, appVersion, messa
   return msg;
 }
 
-export function formatAccountDeletion({ email, hadAppleAccount, appleRevoked }) {
+export function formatAccountDeletion({ userId, hadAppleAccount, appleRevoked }) {
   let msg = `🗑️ Account Deleted
 ━━━━━━━━━━━━━━━
-• Email: ${email || 'unknown'}
+• User ID: ${userId || 'unknown'}
 • Apple Sign-in: ${hadAppleAccount ? 'Yes' : 'No'}`;
 
   if (hadAppleAccount) {

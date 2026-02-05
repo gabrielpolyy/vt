@@ -450,7 +450,7 @@ export async function requestPasswordReset(request, reply) {
       text: emailContent.text,
     });
   } catch (err) {
-    request.log.error({ err, email }, 'Failed to send password reset email');
+    request.log.error({ err }, 'Failed to send password reset email');
     // Still return success to prevent enumeration
   }
 

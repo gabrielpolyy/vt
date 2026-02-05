@@ -81,7 +81,7 @@ export async function deleteAccount(request, reply) {
 
   // Send Telegram notification for audit trail
   const message = formatAccountDeletion({
-    email: user.email,
+    userId,
     hadAppleAccount: !!appleAccount,
     appleRevoked,
   });
