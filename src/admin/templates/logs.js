@@ -37,8 +37,8 @@ export function renderLogsLogin(error = '') {
 }
 
 export function renderLogs(logs, options = {}) {
-  const { sources = [], routes = [], currentLevel, currentSearch, currentSource, currentRoute, currentLimit = 500, message } = options;
-  const levels = ['trace', 'debug', 'info', 'warn', 'error', 'fatal'];
+  const { sources = [], categories = [], currentLevel, currentSearch, currentSource, currentCategory, currentLimit = 500, message } = options;
+  const levels = ['info', 'warn', 'error'];
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -103,6 +103,21 @@ export function renderLogs(logs, options = {}) {
         openModal(title, content);
       }
     });
+
+    // Auto-refresh filters
+    function updateFilter(name, value) {
+      const params = new URLSearchParams(window.location.search);
+      if (value) params.set(name, value);
+      else params.delete(name);
+      window.location.search = params.toString();
+    }
+
+    // Debounced search (300ms)
+    let searchTimeout;
+    function debounceSearch(value) {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => updateFilter('search', value), 300);
+    }
   </script>
 
   <div class="flex justify-between items-center mb-5">
@@ -115,28 +130,29 @@ export function renderLogs(logs, options = {}) {
     </form>
   </div>
 
-  <form class="flex gap-2.5 mb-5 flex-wrap" method="GET">
-    <select name="level" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm">
+  <div class="flex gap-2.5 mb-5 flex-wrap">
+    <select onchange="updateFilter('level', this.value)" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm cursor-pointer">
       <option value="">All Levels</option>
       ${levels.map(l => `<option value="${l}" ${currentLevel === l ? 'selected' : ''}>${l.toUpperCase()}</option>`).join('')}
     </select>
 
     ${sources.length > 0 ? `
-    <select name="source" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm">
+    <select onchange="updateFilter('source', this.value)" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm cursor-pointer">
       <option value="">All Sources</option>
       ${sources.map(s => `<option value="${s}" ${currentSource === s ? 'selected' : ''}>${s}</option>`).join('')}
     </select>
     ` : ''}
 
-    <select name="route" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm">
-      <option value="">All Routes</option>
-      ${routes.map(r => `<option value="${r}" ${currentRoute === r ? 'selected' : ''}>${r}</option>`).join('')}
+    <select onchange="updateFilter('category', this.value)" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm cursor-pointer">
+      <option value="">All Categories</option>
+      ${categories.map(c => `<option value="${c.key}" ${currentCategory === c.key ? 'selected' : ''}>${c.label}</option>`).join('')}
     </select>
 
-    <input type="text" name="search" placeholder="Search logs..." value="${currentSearch || ''}" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm">
-    <input type="number" name="limit" placeholder="Limit" value="${currentLimit}" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm w-20">
-    <button type="submit" class="px-3 py-2 bg-brand-gold border-brand-gold border rounded-md text-slate-950 text-sm font-semibold cursor-pointer hover:bg-brand-gold-hover transition-colors">Filter</button>
-  </form>
+    <input type="text" placeholder="Search logs..." value="${currentSearch || ''}" oninput="debounceSearch(this.value)" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm min-w-[200px]">
+    <select onchange="updateFilter('limit', this.value)" class="px-3 py-2 border border-brand-elevated rounded-md bg-brand-surface text-slate-200 text-sm cursor-pointer">
+      ${[100, 250, 500, 1000].map(n => `<option value="${n}" ${parseInt(currentLimit) === n ? 'selected' : ''}>${n}</option>`).join('')}
+    </select>
+  </div>
 
   ${message ? `<div class="bg-brand-surface p-5 rounded-lg border border-brand-elevated"><p>${message}</p><p>App name: ${options.appName}</p><p>Log dir: ${options.logDir}</p></div>` : `
   <div class="flex flex-col gap-2">
@@ -147,52 +163,81 @@ export function renderLogs(logs, options = {}) {
 </html>`;
 }
 
+// Event category colors
+const EVENT_COLORS = {
+  'auth.': { bg: 'bg-violet-500/20', text: 'text-violet-400', border: 'border-l-violet-500' },
+  'subscription.': { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-l-emerald-500' },
+  'email.': { bg: 'bg-sky-500/20', text: 'text-sky-400', border: 'border-l-sky-500' },
+};
+
+function getEventColors(event) {
+  if (!event) return null;
+  for (const [prefix, colors] of Object.entries(EVENT_COLORS)) {
+    if (event.startsWith(prefix)) return colors;
+  }
+  return { bg: 'bg-slate-500/20', text: 'text-slate-400', border: 'border-l-slate-500' };
+}
+
 function renderLogEntry(log) {
   const isRequest = log.method && log.url;
   const isEvent = log.event;
+  const isMobile = log.screen; // Mobile logs have screen field
   const level = log.level || 'info';
-  const colors = LEVEL_COLORS[level] || LEVEL_COLORS.info;
-  const statusClass = log.status >= 500 ? 'bg-red-500/20 text-red-500' : log.status >= 400 ? 'bg-amber-500/20 text-amber-500' : 'bg-green-500/20 text-green-500';
+  const levelColors = LEVEL_COLORS[level] || LEVEL_COLORS.info;
 
-  if (isRequest) {
-    // Server error logs (5xx)
+  if (isMobile) {
+    // Mobile app logs - orange theme
     return `
-    <div class="bg-brand-surface rounded-lg p-3 px-4 border-l-[3px] ${colors.border}">
-      <div class="flex items-center gap-3 mb-2 flex-wrap">
-        <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold uppercase ${colors.bg} ${colors.text}">${level}</span>
-        <span class="font-mono font-semibold px-1.5 py-0.5 rounded ${statusClass}">${log.status}</span>
-        <span class="font-semibold text-violet-400">${log.method}</span>
-        <span class="text-slate-200 font-mono">${escapeHtml(log.url)}</span>
-        <span class="text-slate-500 text-xs">${log.ms}ms</span>
-        <span class="text-slate-500 text-xs font-mono">${log.time ? new Date(log.time).toLocaleString() : ''}</span>
+    <div class="bg-brand-surface rounded-lg p-3 px-4 border-l-[3px] border-l-orange-500">
+      <div class="flex items-center gap-3 flex-wrap">
+        <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${levelColors.bg} ${levelColors.text}">${level}</span>
+        <span class="font-semibold text-base px-2 py-0.5 rounded bg-orange-500/20 text-orange-400">📱 ${escapeHtml(log.screen)}</span>
+        <span class="text-slate-400 text-xs">${escapeHtml(log.device)} · ${escapeHtml(log.os)} · v${escapeHtml(log.app)}</span>
+        <span class="text-slate-500 text-xs font-mono ml-auto">${log.time ? new Date(log.time).toLocaleString() : ''}</span>
       </div>
-      ${log.userId ? `<div class="text-xs text-slate-400 mt-1">User: ${escapeHtml(log.userId)}</div>` : ''}
-      ${log.err ? `
-      <div class="mt-2.5">
-        <div class="text-[11px] text-slate-500 mb-1 uppercase">Error</div>
-        <div class="body-expandable text-red-500">${escapeHtml(log.err.message || JSON.stringify(log.err, null, 2))}</div>
-      </div>` : ''}
+      <div class="mt-2 text-orange-300 text-sm">${escapeHtml(log.msg)}</div>
+      ${log.stack ? `<div class="mt-1 text-orange-400/70 text-xs font-mono whitespace-pre-wrap">${escapeHtml(log.stack)}</div>` : ''}
     </div>`;
   } else if (isEvent) {
-    // Business event logs (auth, subscription, email)
+    // Business event logs (auth, subscription, email) - prominent display
+    const eventColors = getEventColors(log.event);
     return `
-    <div class="bg-brand-surface rounded-lg p-3 px-4 border-l-[3px] ${colors.border}">
-      <div class="flex items-center gap-3 mb-2 flex-wrap">
-        <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold uppercase ${colors.bg} ${colors.text}">${level}</span>
-        <span class="font-mono font-semibold px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400">${escapeHtml(log.event)}</span>
-        ${log.userId ? `<span class="text-slate-400 text-xs">User: ${escapeHtml(log.userId)}</span>` : ''}
-        <span class="text-slate-500 text-xs font-mono">${log.time ? new Date(log.time).toLocaleString() : ''}</span>
+    <div class="bg-brand-surface rounded-lg p-3 px-4 border-l-[3px] ${eventColors.border}">
+      <div class="flex items-center gap-3 flex-wrap">
+        <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${levelColors.bg} ${levelColors.text}">${level}</span>
+        <span class="font-mono font-semibold text-base px-2 py-0.5 rounded ${eventColors.bg} ${eventColors.text}">${escapeHtml(log.event)}</span>
+        ${log.userId ? `<span class="text-slate-400 text-xs">userId: <span class="font-mono">${escapeHtml(log.userId)}</span></span>` : ''}
+        <span class="text-slate-500 text-xs font-mono ml-auto">${log.time ? new Date(log.time).toLocaleString() : ''}</span>
       </div>
     </div>`;
-  } else {
-    // Generic logs
+  } else if (isRequest) {
+    // HTTP request logs - show errors inline
+    const isError = log.status >= 500;
+    const statusClass = isError ? 'bg-red-500/20 text-red-400' : log.status >= 400 ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400';
+    const borderClass = isError ? 'border-l-red-500' : levelColors.border;
+
     return `
-    <div class="bg-brand-surface rounded-lg p-3 px-4 border-l-[3px] ${colors.border}">
-      <div class="flex items-center gap-3 mb-2 flex-wrap">
-        <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold uppercase ${colors.bg} ${colors.text}">${level}</span>
-        <span class="text-slate-500 text-xs font-mono">${log.time ? new Date(log.time).toLocaleString() : ''}</span>
+    <div class="bg-brand-surface rounded-lg p-3 px-4 border-l-[3px] ${borderClass}">
+      <div class="flex items-center gap-3 flex-wrap">
+        <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${levelColors.bg} ${levelColors.text}">${level}</span>
+        <span class="font-mono font-bold px-1.5 py-0.5 rounded ${statusClass}">${log.status}</span>
+        <span class="font-semibold text-slate-300">${log.method}</span>
+        <span class="text-slate-400 font-mono text-sm">${escapeHtml(log.url)}</span>
+        <span class="text-slate-500 text-xs">${log.ms}ms</span>
+        ${log.userId ? `<span class="text-slate-500 text-xs">userId: <span class="font-mono">${escapeHtml(log.userId)}</span></span>` : ''}
+        <span class="text-slate-500 text-xs font-mono ml-auto">${log.time ? new Date(log.time).toLocaleString() : ''}</span>
       </div>
-      <div class="text-slate-200 py-1">${escapeHtml(log.msg)}</div>
+      ${log.err ? `<div class="mt-2 text-red-400 text-sm font-mono">${escapeHtml(log.err.message || JSON.stringify(log.err))}</div>` : ''}
+    </div>`;
+  } else {
+    // Generic logs - de-emphasized
+    return `
+    <div class="bg-brand-surface/50 rounded-lg p-2.5 px-4 border-l-[3px] border-l-slate-600">
+      <div class="flex items-center gap-3 flex-wrap">
+        <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${levelColors.bg} ${levelColors.text}">${level}</span>
+        <span class="text-slate-500 text-xs font-mono">${log.time ? new Date(log.time).toLocaleString() : ''}</span>
+        <span class="text-slate-400 text-sm">${escapeHtml(log.msg)}</span>
+      </div>
     </div>`;
   }
 }
