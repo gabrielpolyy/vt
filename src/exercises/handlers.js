@@ -14,6 +14,24 @@ import { getHighwayAudioUrls } from '../utils/r2.js';
 // Access level helpers
 const ACCESS_HIERARCHY = { guest: 0, registered: 1, premium: 2 };
 
+// Resolve relative asset URLs to full URLs for learn exercises
+function resolveAssetUrls(definition, appUrl) {
+  if (!definition.sections) return definition;
+
+  return {
+    ...definition,
+    sections: definition.sections.map(section => {
+      if ((section.type === 'image' || section.type === 'audio') && section.url) {
+        return {
+          ...section,
+          url: section.url.startsWith('/') ? `${appUrl}${section.url}` : section.url
+        };
+      }
+      return section;
+    })
+  };
+}
+
 function getUserAccessLevel(user) {
   if (user.isGuest) return 'guest';
   if (user.tier === 'premium') return 'premium';
@@ -72,9 +90,15 @@ export async function getExercise(request, reply) {
   const voiceProfile = await getVoiceProfile(userId);
 
   // Skip transposition for audio and learn exercises - content shouldn't be modified
-  const definition = (exercise.category === 'audio' || exercise.type === 'learn')
+  let definition = (exercise.category === 'audio' || exercise.type === 'learn')
     ? exercise.definition
     : transposeForVoiceProfile(exercise.definition, voiceProfile);
+
+  // Transform relative asset URLs to full URLs for learn exercises
+  if (exercise.type === 'learn') {
+    const appUrl = process.env.APP_URL || 'https://pitchhighway.com';
+    definition = resolveAssetUrls(definition, appUrl);
+  }
 
   return reply.send(definition);
 }

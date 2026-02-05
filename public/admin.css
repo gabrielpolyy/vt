@@ -372,6 +372,9 @@
   .justify-center {
     justify-content: center;
   }
+  .gap-1 {
+    gap: calc(var(--spacing) * 1);
+  }
   .gap-2 {
     gap: calc(var(--spacing) * 2);
   }
@@ -417,6 +420,10 @@
     border-style: var(--tw-border-style);
     border-width: 0px;
   }
+  .border-t {
+    border-top-style: var(--tw-border-style);
+    border-top-width: 1px;
+  }
   .border-b {
     border-bottom-style: var(--tw-border-style);
     border-bottom-width: 1px;
@@ -439,6 +446,9 @@
   }
   .border-slate-600 {
     border-color: var(--color-slate-600);
+  }
+  .border-slate-700 {
+    border-color: var(--color-slate-700);
   }
   .border-l-amber-500 {
     border-left-color: var(--color-amber-500);
@@ -584,6 +594,9 @@
       background-color: color-mix(in oklab, var(--color-slate-700) 50%, transparent);
     }
   }
+  .bg-slate-950 {
+    background-color: var(--color-slate-950);
+  }
   .bg-transparent {
     background-color: transparent;
   }
@@ -626,6 +639,9 @@
   .px-2 {
     padding-inline: calc(var(--spacing) * 2);
   }
+  .px-2\.5 {
+    padding-inline: calc(var(--spacing) * 2.5);
+  }
   .px-3 {
     padding-inline: calc(var(--spacing) * 3);
   }
@@ -649,6 +665,9 @@
   }
   .py-4 {
     padding-block: calc(var(--spacing) * 4);
+  }
+  .pt-2 {
+    padding-top: calc(var(--spacing) * 2);
   }
   .text-center {
     text-align: center;
