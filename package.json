@@ -14,6 +14,7 @@
     "seed": "node src/seed/runner.js",
     "seed:user": "node src/seed/runner.js user",
     "seed:exercises": "node src/seed/runner.js exercises",
+    "seed:journey": "node src/seed/runner.js journey",
     "seed:voice-profile": "node src/seed/runner.js voice-profile",
     "db:reset": "node src/db-reset.js",
     "prod": "npm run css:build && node src/server.js",

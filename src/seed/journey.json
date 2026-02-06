@@ -1,0 +1,317 @@
+{
+  "levels": [
+    {
+      "id": "level-1",
+      "number": 1,
+      "title": "Foundations",
+      "nodes": [
+        {
+          "id": "1-1",
+          "title": "Pitch Basics",
+          "icon": "waveform",
+          "warmupExercise": {
+            "id": "voice_exploration",
+            "title": "Voice Exploration",
+            "artist": "Warmup",
+            "jsonFileName": "voice_exploration",
+            "durationMs": 50000
+          },
+          "learnExercises": [
+            {
+              "id": "learn_pitch_basics",
+              "jsonFileName": "learn_pitch_basics",
+              "name": "Understanding Pitch",
+              "description": "Learn what pitch is and how your voice produces different notes"
+            }
+          ],
+          "exercises": [
+            { "id": "single_note_hold", "jsonFileName": "single_note_hold", "name": "Note Hold", "description": "Hold a single note to find your pitch center" },
+            { "id": "three_note_intro", "jsonFileName": "three_note_intro", "name": "Triad Introduction", "description": "Match the notes of a major triad" },
+            { "id": "five_note_warmup", "jsonFileName": "five_note_warmup", "name": "Scale Warmup", "description": "Simple ascending and descending pattern" }
+          ],
+          "highwayExercises": [
+            {
+              "id": "pitch_highway_intro",
+              "title": "Pitch Highway Intro",
+              "artist": "Practice",
+              "jsonFileName": "highway_pitch_intro",
+              "durationMs": 20000
+            }
+          ],
+          "prerequisiteIds": []
+        },
+        {
+          "id": "1-2",
+          "title": "Note Matching",
+          "icon": "target",
+          "warmupExercise": {
+            "id": "voice_exploration",
+            "title": "Voice Exploration",
+            "artist": "Warmup",
+            "jsonFileName": "voice_exploration",
+            "durationMs": 50000
+          },
+          "exercises": [
+            { "id": "quick_match_low", "jsonFileName": "quick_match_low", "name": "Quick Match: Low", "description": "Match notes in the lower part of your range" },
+            { "id": "quick_match_mid", "jsonFileName": "quick_match_mid", "name": "Quick Match: Mid", "description": "Match notes in the middle of your range" },
+            { "id": "quick_match_full", "jsonFileName": "quick_match_full", "name": "Quick Match: Full", "description": "Match notes spanning the full octave" }
+          ],
+          "highwayExercises": [
+            {
+              "id": "note_matching_highway",
+              "title": "Note Matching Highway",
+              "artist": "Practice",
+              "jsonFileName": "highway_note_matching",
+              "durationMs": 25000
+            }
+          ],
+          "prerequisiteIds": ["1-1"]
+        }
+      ]
+    },
+    {
+      "id": "level-2",
+      "number": 2,
+      "title": "Scales",
+      "nodes": [
+        {
+          "id": "2-1",
+          "title": "Major Scales",
+          "icon": "music.note.list",
+          "warmupExercise": {
+            "id": "voice_exploration",
+            "title": "Voice Exploration",
+            "artist": "Warmup",
+            "jsonFileName": "voice_exploration",
+            "durationMs": 50000
+          },
+          "exercises": [
+            { "id": "major_ascending", "jsonFileName": "major_ascending", "name": "Major Scale Ascending", "description": "Climb up the major scale" },
+            { "id": "major_descending", "jsonFileName": "major_descending", "name": "Major Scale Descending", "description": "Descend the major scale" },
+            { "id": "major_full", "jsonFileName": "major_full", "name": "Major Full Scale", "description": "Complete scale up and down" }
+          ],
+          "highwayExercises": [
+            {
+              "id": "major_scale_highway",
+              "title": "Major Scale Highway",
+              "artist": "Practice",
+              "jsonFileName": "highway_major_scale",
+              "durationMs": 35000
+            }
+          ],
+          "prerequisiteIds": ["1-1", "1-2"]
+        },
+        {
+          "id": "2-2",
+          "title": "Minor Scales",
+          "icon": "music.note",
+          "warmupExercise": {
+            "id": "voice_exploration",
+            "title": "Voice Exploration",
+            "artist": "Warmup",
+            "jsonFileName": "voice_exploration",
+            "durationMs": 50000
+          },
+          "exercises": [
+            { "id": "minor_ascending", "jsonFileName": "minor_ascending", "name": "Minor Scale Ascending", "description": "Climb up the natural minor scale" },
+            { "id": "minor_descending", "jsonFileName": "minor_descending", "name": "Minor Scale Descending", "description": "Descend the natural minor scale" },
+            { "id": "minor_full", "jsonFileName": "minor_full", "name": "Minor Full Scale", "description": "Complete minor scale up and down" }
+          ],
+          "highwayExercises": [
+            {
+              "id": "minor_scale_highway",
+              "title": "Minor Scale Highway",
+              "artist": "Practice",
+              "jsonFileName": "highway_minor_scale",
+              "durationMs": 35000
+            }
+          ],
+          "prerequisiteIds": ["2-1"]
+        }
+      ]
+    },
+    {
+      "id": "level-3",
+      "number": 3,
+      "title": "Intervals",
+      "nodes": [
+        {
+          "id": "3-1",
+          "title": "Small Intervals",
+          "icon": "arrow.up.right",
+          "warmupExercise": {
+            "id": "voice_exploration",
+            "title": "Voice Exploration",
+            "artist": "Warmup",
+            "jsonFileName": "voice_exploration",
+            "durationMs": 50000
+          },
+          "exercises": [
+            { "id": "half_steps", "jsonFileName": "half_steps", "name": "Half Steps", "description": "Practice chromatic half-step movements" },
+            { "id": "whole_steps", "jsonFileName": "whole_steps", "name": "Whole Steps", "description": "Practice whole-tone scale segments" },
+            { "id": "thirds_practice", "jsonFileName": "thirds_practice", "name": "Thirds Practice", "description": "Alternate between major and minor thirds" }
+          ],
+          "highwayExercises": [
+            {
+              "id": "small_intervals_highway",
+              "title": "Small Intervals Highway",
+              "artist": "Practice",
+              "jsonFileName": "highway_small_intervals",
+              "durationMs": 50000
+            }
+          ],
+          "prerequisiteIds": ["2-1", "2-2"]
+        },
+        {
+          "id": "3-2",
+          "title": "Large Intervals",
+          "icon": "arrow.up.arrow.down",
+          "warmupExercise": {
+            "id": "voice_exploration",
+            "title": "Voice Exploration",
+            "artist": "Warmup",
+            "jsonFileName": "voice_exploration",
+            "durationMs": 50000
+          },
+          "exercises": [
+            { "id": "perfect_fourths", "jsonFileName": "perfect_fourths", "name": "Perfect Fourths", "description": "Practice 5 half-step jumps" },
+            { "id": "perfect_fifths", "jsonFileName": "perfect_fifths", "name": "Perfect Fifths", "description": "Practice 7 half-step jumps" },
+            { "id": "octave_jumps", "jsonFileName": "octave_jumps", "name": "Octave Jumps", "description": "Practice octave jumps within range" }
+          ],
+          "highwayExercises": [
+            {
+              "id": "large_intervals_highway",
+              "title": "Large Intervals Highway",
+              "artist": "Practice",
+              "jsonFileName": "highway_large_intervals",
+              "durationMs": 50000
+            }
+          ],
+          "prerequisiteIds": ["3-1"]
+        }
+      ]
+    },
+    {
+      "id": "level-4",
+      "number": 4,
+      "title": "Patterns",
+      "nodes": [
+        {
+          "id": "4-1",
+          "title": "Arpeggios",
+          "icon": "waveform.path.ecg",
+          "warmupExercise": {
+            "id": "voice_exploration",
+            "title": "Voice Exploration",
+            "artist": "Warmup",
+            "jsonFileName": "voice_exploration",
+            "durationMs": 50000
+          },
+          "exercises": [
+            { "id": "major_triad_arpeggio", "jsonFileName": "major_triad_arpeggio", "name": "Major Triad Arpeggio", "description": "Major triad up and down" },
+            { "id": "minor_triad_arpeggio", "jsonFileName": "minor_triad_arpeggio", "name": "Minor Triad Arpeggio", "description": "Minor triad up and down" },
+            { "id": "seventh_arpeggio", "jsonFileName": "seventh_arpeggio", "name": "Seventh Chord Arpeggio", "description": "Major 7th arpeggio" }
+          ],
+          "highwayExercises": [
+            {
+              "id": "arpeggio_highway",
+              "title": "Arpeggio Highway",
+              "artist": "Practice",
+              "jsonFileName": "highway_arpeggios",
+              "durationMs": 35000
+            }
+          ],
+          "prerequisiteIds": ["3-1", "3-2"]
+        },
+        {
+          "id": "4-2",
+          "title": "Melodic Sequences",
+          "icon": "music.quarternote.3",
+          "warmupExercise": {
+            "id": "voice_exploration",
+            "title": "Voice Exploration",
+            "artist": "Warmup",
+            "jsonFileName": "voice_exploration",
+            "durationMs": 50000
+          },
+          "exercises": [
+            { "id": "sequence_pattern_1", "jsonFileName": "sequence_pattern_1", "name": "Stepwise Sequence", "description": "Ascending pattern with repeated notes" },
+            { "id": "sequence_pattern_2", "jsonFileName": "sequence_pattern_2", "name": "Skip-Step Sequence", "description": "Alternating skips and steps" },
+            { "id": "combined_pattern", "jsonFileName": "combined_pattern", "name": "Combined Pattern", "description": "Scales and skips combined" }
+          ],
+          "highwayExercises": [
+            {
+              "id": "melodic_sequences_highway",
+              "title": "Melodic Sequences Highway",
+              "artist": "Practice",
+              "jsonFileName": "highway_melodic_sequences",
+              "durationMs": 40000
+            }
+          ],
+          "prerequisiteIds": ["4-1"]
+        }
+      ]
+    },
+    {
+      "id": "level-5",
+      "number": 5,
+      "title": "Precision",
+      "nodes": [
+        {
+          "id": "5-1",
+          "title": "Advanced Accuracy",
+          "icon": "scope",
+          "warmupExercise": {
+            "id": "voice_exploration",
+            "title": "Voice Exploration",
+            "artist": "Warmup",
+            "jsonFileName": "voice_exploration",
+            "durationMs": 50000
+          },
+          "exercises": [
+            { "id": "precision_scales", "jsonFileName": "precision_scales", "name": "Precision Scales", "description": "Full major scale with tight tolerance" },
+            { "id": "precision_arpeggios", "jsonFileName": "precision_arpeggios", "name": "Precision Arpeggios", "description": "Major 7th arpeggio with tight tolerance" },
+            { "id": "chromatic_challenge", "jsonFileName": "chromatic_challenge", "name": "Chromatic Challenge", "description": "Chromatic half-steps with precision" }
+          ],
+          "highwayExercises": [
+            {
+              "id": "precision_highway",
+              "title": "Precision Highway",
+              "artist": "Practice",
+              "jsonFileName": "highway_precision",
+              "durationMs": 45000
+            }
+          ],
+          "prerequisiteIds": ["4-1", "4-2"]
+        },
+        {
+          "id": "5-2",
+          "title": "Mastery",
+          "icon": "star.fill",
+          "warmupExercise": {
+            "id": "voice_exploration",
+            "title": "Voice Exploration",
+            "artist": "Warmup",
+            "jsonFileName": "voice_exploration",
+            "durationMs": 50000
+          },
+          "exercises": [
+            { "id": "master_scale_test", "jsonFileName": "master_scale_test", "name": "Master Scale Test", "description": "Major and minor scales combined" },
+            { "id": "master_interval_test", "jsonFileName": "master_interval_test", "name": "Master Interval Test", "description": "All intervals within the octave" },
+            { "id": "master_pattern_test", "jsonFileName": "master_pattern_test", "name": "Master Pattern Test", "description": "Complex melodic sequence - the ultimate challenge" }
+          ],
+          "highwayExercises": [
+            {
+              "id": "mastery_highway",
+              "title": "Mastery Highway",
+              "artist": "Practice",
+              "jsonFileName": "highway_mastery",
+              "durationMs": 60000
+            }
+          ],
+          "prerequisiteIds": ["5-1"]
+        }
+      ]
+    }
+  ]
+}

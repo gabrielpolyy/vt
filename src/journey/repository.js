@@ -1,5 +1,13 @@
 import { db } from '../db.js';
 
+// Get the default journey definition
+export async function getJourneyDefinition() {
+  const result = await db.query(
+    `SELECT definition FROM journeys WHERE name = 'default' LIMIT 1`
+  );
+  return result.rows[0] || null;
+}
+
 // Get all completed warmups for user (distinct level/node pairs)
 export async function getCompletedWarmups(userId) {
   const result = await db.query(

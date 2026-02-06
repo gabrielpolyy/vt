@@ -1,4 +1,4 @@
-import { getCompletedWarmups, getExerciseProgressBySlug } from './repository.js';
+import { getCompletedWarmups, getExerciseProgressBySlug, getJourneyDefinition } from './repository.js';
 import { getUserProgress, getTotalScore } from '../dashboard/repository.js';
 import { getVoiceProfile } from '../voice-profile/repository.js';
 
@@ -47,6 +47,13 @@ function computeStars(score, maxScore) {
   if (percent < 80) return 1;
   if (percent < 95) return 2;
   return 3;
+}
+
+// GET /api/journey/skill-tree - Get skill tree definition
+export async function getSkillTree(request, reply) {
+  const journey = await getJourneyDefinition();
+  if (!journey) return reply.code(404).send({ error: 'No journey found' });
+  return reply.send(journey.definition);
 }
 
 // GET /api/journey - Get complete journey/skill tree data

@@ -1,4 +1,4 @@
-import { getJourney } from './handlers.js';
+import { getJourney, getSkillTree } from './handlers.js';
 import { authenticate } from '../auth/middleware.js';
 
 export default async function journeyRoutes(fastify) {
@@ -8,5 +8,10 @@ export default async function journeyRoutes(fastify) {
   // GET /api/journey - Get complete journey/skill tree data
   fastify.get('/', {
     handler: getJourney,
+  });
+
+  // GET /api/journey/skill-tree - Get skill tree definition
+  fastify.get('/skill-tree', {
+    handler: getSkillTree,
   });
 }
