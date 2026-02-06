@@ -212,3 +212,31 @@ export async function recordDailyActivity(userId, source = 'practice') {
     [userId, source]
   );
 }
+
+// Get user's journey-specific progress
+export async function getUserJourneyProgress(userId, journeyId) {
+  const result = await db.query(
+    `SELECT level, node FROM user_journey_progress WHERE user_id = $1 AND journey_id = $2`,
+    [userId, journeyId]
+  );
+  return {
+    level: result.rows[0]?.level || 1,
+    node: result.rows[0]?.node || 1,
+  };
+}
+
+// Update user's journey-specific progress (upsert)
+export async function updateUserJourneyProgress(userId, journeyId, level, node) {
+  const result = await db.query(
+    `INSERT INTO user_journey_progress (user_id, journey_id, level, node, last_active_at)
+     VALUES ($1, $2, $3, $4, NOW())
+     ON CONFLICT (user_id, journey_id)
+     DO UPDATE SET level = $3, node = $4, last_active_at = NOW()
+     RETURNING level, node`,
+    [userId, journeyId, level, node]
+  );
+  return {
+    level: result.rows[0]?.level,
+    node: result.rows[0]?.node,
+  };
+}

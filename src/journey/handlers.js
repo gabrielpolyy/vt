@@ -1,5 +1,5 @@
-import { getCompletedWarmups, getExerciseProgressBySlug, getJourneyDefinition } from './repository.js';
-import { getUserProgress, getTotalScore } from '../dashboard/repository.js';
+import { getCompletedWarmups, getExerciseProgressBySlug, getJourneyDefinition, getJourneyDefinitionById, getDefaultJourneyId, getJourneyList } from './repository.js';
+import { getUserProgress, getTotalScore, getUserJourneyProgress, updateUserJourneyProgress } from '../dashboard/repository.js';
 import { getVoiceProfile } from '../voice-profile/repository.js';
 
 // Access level helpers
@@ -101,4 +101,117 @@ export async function getJourney(request, reply) {
     completedWarmups: finalCompletedWarmups,
     exerciseProgress,
   });
+}
+
+// Build exercise progress map (shared helper)
+function buildExerciseProgressMap(exerciseProgressRows, userLevel) {
+  const exerciseProgress = {};
+  for (const row of exerciseProgressRows) {
+    const maxScore = computeMaxScore(row.definition);
+    const stars = computeStars(row.best_score, maxScore);
+    exerciseProgress[row.slug] = {
+      bestScore: row.best_score ?? 0,
+      maxScore,
+      stars,
+      completed: maxScore === 0 ? row.completed_count > 0 : stars >= 1,
+      accessLevel: row.access_level,
+      isLocked: !hasAccess(userLevel, row.access_level),
+    };
+  }
+  return exerciseProgress;
+}
+
+// GET /api/journey/list - List all active journeys with user progress
+export async function listJourneys(request, reply) {
+  const userId = request.user.id;
+  const rows = await getJourneyList(userId);
+
+  const journeys = rows.map((row) => {
+    const definition = row.definition;
+    const levels = definition?.levels || [];
+    const totalLevels = levels.length;
+    const totalNodes = levels.reduce((sum, l) => sum + (l.nodes?.length || 0), 0);
+    const hasStarted = row.started_at != null;
+
+    return {
+      id: row.id,
+      name: row.name,
+      displayName: row.display_name,
+      description: row.description,
+      icon: row.icon,
+      totalLevels,
+      totalNodes,
+      currentLevel: row.level,
+      currentNode: row.node,
+      hasStarted,
+      lastActiveAt: row.last_active_at,
+    };
+  });
+
+  return reply.send({ journeys });
+}
+
+// GET /api/journey/:journeyId - Get journey data by ID
+export async function getJourneyById(request, reply) {
+  const userId = request.user.id;
+  const { journeyId } = request.params;
+  const userLevel = getUserAccessLevel(request.user);
+
+  const journey = await getJourneyDefinitionById(journeyId);
+  if (!journey) return reply.code(404).send({ error: 'Journey not found' });
+
+  const [progress, score, completedWarmups, exerciseProgressRows, voiceProfile] = await Promise.all([
+    getUserJourneyProgress(userId, journeyId),
+    getTotalScore(userId),
+    getCompletedWarmups(userId),
+    getExerciseProgressBySlug(userId),
+    getVoiceProfile(userId),
+  ]);
+
+  let finalCompletedWarmups = completedWarmups;
+  if (voiceProfile) {
+    const hasL1N1 = completedWarmups.some((w) => w.level === 1 && w.node === 1);
+    if (!hasL1N1) {
+      finalCompletedWarmups = [{ level: 1, node: 1 }, ...completedWarmups];
+    }
+  }
+
+  const exerciseProgress = buildExerciseProgressMap(exerciseProgressRows, userLevel);
+
+  return reply.send({
+    currentLevel: progress.level,
+    currentNode: progress.node,
+    score,
+    completedWarmups: finalCompletedWarmups,
+    exerciseProgress,
+  });
+}
+
+// GET /api/journey/:journeyId/skill-tree - Get skill tree by journey ID
+export async function getSkillTreeById(request, reply) {
+  const { journeyId } = request.params;
+  const journey = await getJourneyDefinitionById(journeyId);
+  if (!journey) return reply.code(404).send({ error: 'Journey not found' });
+  return reply.send(journey.definition);
+}
+
+// PATCH /api/journey/:journeyId/progress - Update journey-specific progress
+export async function updateJourneyProgress(request, reply) {
+  const userId = request.user.id;
+  const { journeyId } = request.params;
+  const { level, node } = request.body;
+
+  if (level == null || typeof level !== 'number' || level < 1 || level > 5) {
+    return reply.code(400).send({ error: 'level must be a number between 1 and 5' });
+  }
+
+  if (node == null || typeof node !== 'number' || node < 1) {
+    return reply.code(400).send({ error: 'node must be a number >= 1' });
+  }
+
+  const journey = await getJourneyDefinitionById(journeyId);
+  if (!journey) return reply.code(404).send({ error: 'Journey not found' });
+
+  const updatedProgress = await updateUserJourneyProgress(userId, journeyId, level, node);
+  return reply.send({ level: updatedProgress.level, node: updatedProgress.node });
 }

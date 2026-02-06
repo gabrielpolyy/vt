@@ -13,6 +13,10 @@ export async function seed(db) {
 
   const jsonPath = path.join(__dirname, 'journey.json');
   const json = await fs.readFile(jsonPath, 'utf-8');
-  await db.query('INSERT INTO journeys (name, definition) VALUES ($1, $2)', ['default', json]);
+  await db.query(
+    `INSERT INTO journeys (name, definition, display_name, description, icon)
+     VALUES ($1, $2, $3, $4, $5)`,
+    ['default', json, 'Vocal Foundations', 'Build your pitch, breath control, and vocal range from the ground up', 'waveform']
+  );
   console.log('         Seeded 1 journey.');
 }
