@@ -51,4 +51,22 @@ export async function seed(db) {
   }
 
   console.log(`         Created ${sessions.length} voice exploration sessions (warmups)`);
+
+  // Seed user_journey_progress so the mobile skill tree reflects actual progress
+  // Without this, the LEFT JOIN in getJourneyList defaults to level 1, node 1
+  const { rows: journeys } = await db.query(
+    `SELECT id FROM journeys WHERE name = 'default' LIMIT 1`
+  );
+
+  if (journeys.length > 0) {
+    const journeyId = journeys[0].id;
+    await db.query(
+      `INSERT INTO user_journey_progress (user_id, journey_id, level, node)
+       VALUES ($1, $2, $3, $4)`,
+      [userId, journeyId, 2, 2]
+    );
+    console.log(`         Set journey progress to level 2, node 2`);
+  } else {
+    console.log(`         No default journey found — skipped journey progress`);
+  }
 }
