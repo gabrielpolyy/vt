@@ -9,6 +9,7 @@ import { renderHome } from './templates/home.js';
 import { renderHighwayForm } from './templates/highway.js';
 import { renderAudioExercises } from './templates/audioExercises.js';
 import { renderDocs } from './templates/docs.js';
+import { sendTelegramAlert, formatServerError } from '../logging/telegramNotifier.js';
 import {
   getAudioExercisesPaginated,
   getAudioExercisesCount,
@@ -115,6 +116,12 @@ export async function submitHighwayJob(request, reply) {
     const jobId = await insertJob(payload);
     return reply.type('text/html').send(renderHighwayForm({ success: true, jobId }));
   } catch (err) {
+    sendTelegramAlert(formatServerError({
+      method: 'POST',
+      url: '/admin/highway',
+      status: 500,
+      error: err,
+    }));
     return reply.type('text/html').send(renderHighwayForm({ error: `Failed to create job: ${err.message}` }));
   }
 }
