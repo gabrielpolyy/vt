@@ -52,7 +52,11 @@ fastify.register(fastifyCookie);
 fastify.register(fastifyFormbody);
 
 // Multipart support for file uploads
-fastify.register(fastifyMultipart);
+fastify.register(fastifyMultipart, {
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB
+  },
+});
 
 // Email plugin (SMTP)
 fastify.register(emailPlugin);
