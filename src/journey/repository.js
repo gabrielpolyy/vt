@@ -11,7 +11,7 @@ export async function getJourneyDefinition() {
 // Get journey definition by ID
 export async function getJourneyDefinitionById(journeyId) {
   const result = await db.query(
-    `SELECT id, name, definition, display_name, description, icon FROM journeys WHERE id = $1 AND is_active = TRUE LIMIT 1`,
+    `SELECT id, name, definition, display_name, description, icon, version FROM journeys WHERE id = $1 AND is_active = TRUE LIMIT 1`,
     [journeyId]
   );
   return result.rows[0] || null;
@@ -28,7 +28,7 @@ export async function getDefaultJourneyId() {
 // Get all active journeys with user progress
 export async function getJourneyList(userId) {
   const result = await db.query(
-    `SELECT j.id, j.name, j.display_name, j.description, j.icon, j.definition,
+    `SELECT j.id, j.name, j.display_name, j.description, j.icon, j.definition, j.version,
             COALESCE(ujp.level, 1) as level, COALESCE(ujp.node, 1) as node,
             ujp.last_active_at, ujp.started_at
      FROM journeys j

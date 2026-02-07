@@ -139,6 +139,7 @@ export async function listJourneys(request, reply) {
       displayName: row.display_name,
       description: row.description,
       icon: row.icon,
+      version: row.version,
       totalLevels,
       totalNodes,
       currentLevel: row.level,
@@ -192,7 +193,7 @@ export async function getSkillTreeById(request, reply) {
   const { journeyId } = request.params;
   const journey = await getJourneyDefinitionById(journeyId);
   if (!journey) return reply.code(404).send({ error: 'Journey not found' });
-  return reply.send(journey.definition);
+  return reply.send({ version: journey.version, levels: journey.definition.levels });
 }
 
 // PATCH /api/journey/:journeyId/progress - Update journey-specific progress
