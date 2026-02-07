@@ -100,11 +100,16 @@ export async function getExercise(request, reply) {
     definition = resolveAssetUrls(definition, appUrl);
   }
 
-  return reply.send(definition);
+  return reply.send({ name: exercise.name, description: exercise.description, ...definition });
 }
 
 // Count total notes in exercise definition
 function countNotes(definition) {
+  // Highway exercises use cues (voice cues = scored notes)
+  if (definition.cues) {
+    return definition.cues.filter((c) => c.kind === 'voice').length;
+  }
+  // Pitch exercises use steps with notes
   let count = 0;
   for (const step of definition.steps || []) {
     count += (step.notes || []).length;

@@ -8,6 +8,7 @@ import { renderLogin } from './templates/login.js';
 import { renderHome } from './templates/home.js';
 import { renderHighwayForm } from './templates/highway.js';
 import { renderAudioExercises } from './templates/audioExercises.js';
+import { renderDocs } from './templates/docs.js';
 import {
   getAudioExercisesPaginated,
   getAudioExercisesCount,
@@ -116,6 +117,14 @@ export async function submitHighwayJob(request, reply) {
   } catch (err) {
     return reply.type('text/html').send(renderHighwayForm({ error: `Failed to create job: ${err.message}` }));
   }
+}
+
+export async function getDocs(request, reply) {
+  if (request.needsLogin) {
+    return reply.type('text/html').send(renderLogin(request.loginError || ''));
+  }
+
+  return reply.type('text/html').send(renderDocs());
 }
 
 export async function handleLogin(request, reply) {

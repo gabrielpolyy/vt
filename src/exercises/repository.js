@@ -50,7 +50,6 @@ export async function getExercises({ type, category, filterOut, userId } = {}) {
 
   const result = await db.query(
     `SELECT e.id, e.slug, e.type, e.category, e.name, e.description,
-            e.definition->>'icon' as icon,
             e.definition->>'trackId' as "trackId",
             (e.definition->>'durationMs')::int as "durationMs",
             CASE

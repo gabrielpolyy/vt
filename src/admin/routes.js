@@ -1,5 +1,5 @@
 import { requireAdmin } from '../auth/adminMiddleware.js';
-import { getAdminHome, handleLogin, handleLogout, getHighwayForm, submitHighwayJob, getAudioExercises, toggleExerciseActive, updateExerciseLevel, updateExerciseGenre } from './handlers.js';
+import { getAdminHome, handleLogin, handleLogout, getHighwayForm, submitHighwayJob, getAudioExercises, toggleExerciseActive, updateExerciseLevel, updateExerciseGenre, getDocs } from './handlers.js';
 import { getLogs } from './logsHandlers.js';
 
 export default async function adminRoutes(fastify) {
@@ -22,4 +22,7 @@ export default async function adminRoutes(fastify) {
 
   // Logs viewer
   fastify.get('/logs', getLogs);
+
+  // Technical docs
+  fastify.get('/docs', getDocs);
 }

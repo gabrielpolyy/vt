@@ -18,6 +18,10 @@ export function renderHome() {
         <h2 class="text-lg font-semibold m-0 mb-2 text-slate-200">Logs</h2>
         <p class="text-sm text-slate-400 m-0">View application logs and request history</p>
       </a>
+      <a href="/admin/docs" class="block bg-brand-surface border border-brand-elevated rounded-xl p-6 no-underline text-inherit transition-colors hover:border-brand-gold">
+        <h2 class="text-lg font-semibold m-0 mb-2 text-slate-200">Technical Docs</h2>
+        <p class="text-sm text-slate-400 m-0">Exercise structure reference for all exercise types</p>
+      </a>
     </div>
     `,
   });
