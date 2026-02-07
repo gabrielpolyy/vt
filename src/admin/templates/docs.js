@@ -409,7 +409,7 @@ function renderHighwayAudio() {
   "id": "string",               // required — unique song identifier
   "title": "string",            // required — song title
   "artist": "string",           // required — artist name
-  "jsonFileName": "string",     // required — filename of Song JSON data
+  "slug": "string",              // required — exercise slug for API lookup
   "durationMs": 180000,         // optional — total duration in ms
   "isFavorite": false,          // optional — defaults to false
   "accessLevel": "string",      // optional — guest, registered, or premium
@@ -423,7 +423,7 @@ function renderHighwayAudio() {
           ${fieldRow('id', 'Unique song identifier')}
           ${fieldRow('title', 'Song title displayed in the UI')}
           ${fieldRow('artist', 'Artist or composer name')}
-          ${fieldRow('jsonFileName', 'Filename of the full Song JSON data (no .json extension)')}
+          ${fieldRow('slug', 'Exercise slug for API lookup (e.g. "highway_pitch_intro")')}
           ${fieldRow('durationMs', '(optional) Total song duration in ms, for display before loading')}
           ${fieldRow('isFavorite', '(optional) Whether user has favorited this song — defaults to false')}
           ${fieldRow('accessLevel', '(optional) Access tier: guest, registered, or premium')}
